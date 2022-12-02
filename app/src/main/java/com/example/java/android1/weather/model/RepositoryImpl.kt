@@ -7,7 +7,7 @@ class RepositoryImpl : Repository {
     }
 
     override fun getWeatherFromLocalStorage(): Weather {
-        return Weather(getDefaultCity(), -15, -20)
+        return getDefaultWeather()
     }
 
 }
