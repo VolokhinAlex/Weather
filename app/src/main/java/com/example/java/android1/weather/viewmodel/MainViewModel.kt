@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.java.android1.weather.model.Repository
 import com.example.java.android1.weather.model.RepositoryImpl
-import java.util.concurrent.Executors
 
 class MainViewModel(
     private val liveData: MutableLiveData<AppState> = MutableLiveData(),
@@ -17,15 +16,22 @@ class MainViewModel(
         return liveData
     }
 
-    fun getWeatherFromLocalSource() = getDataFromLocalSource()
-    fun getWeatherFromRemoteSource() = getDataFromLocalSource()
+    fun getWeatherFromLocalSourceRus() = getDataFromLocalSource(isRussian = true)
 
-    private fun getDataFromLocalSource() {
+    fun getWeatherFromLocalSourceWorld() = getDataFromLocalSource(isRussian = false)
+
+    fun getWeatherFromRemoteSource() = getDataFromLocalSource(isRussian = true)
+
+    private fun getDataFromLocalSource(isRussian: Boolean) {
         liveData.value = AppState.Loading
-        Executors.newFixedThreadPool(5).submit {
+        Thread {
             Thread.sleep(1000)
-            liveData.postValue(AppState.Success(repository.getWeatherFromLocalStorage()))
-        }
+            val weatherData = when (isRussian) {
+                true ->  repository.getWeatherFromLocalStorageRus()
+                false -> repository.getWeatherFromLocalStorageWorld()
+            }
+            liveData.postValue(AppState.Success(weatherData))
+        }.start()
     }
 
 }

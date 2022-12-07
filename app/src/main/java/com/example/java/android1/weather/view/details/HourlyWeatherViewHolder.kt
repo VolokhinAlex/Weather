@@ -1,4 +1,4 @@
-package com.example.java.android1.weather.view
+package com.example.java.android1.weather.view.details
 
 import android.view.View
 import android.widget.TextView
