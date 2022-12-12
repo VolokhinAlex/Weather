@@ -6,13 +6,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.java.android1.weather.R
 
-class HourlyWeatherAdapter(
-    private val inflater: LayoutInflater
-) : RecyclerView.Adapter<HourlyWeatherViewHolder>() {
+class HourlyWeatherAdapter : RecyclerView.Adapter<HourlyWeatherViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HourlyWeatherViewHolder {
-        val view: View = inflater.inflate(R.layout.hourly_weather_item, parent, false)
-        return HourlyWeatherViewHolder(view)
+        return HourlyWeatherViewHolder(
+            LayoutInflater.from(parent.context).inflate(R.layout.hourly_weather_item, parent, false)
+        )
     }
 
     override fun onBindViewHolder(holder: HourlyWeatherViewHolder, position: Int) {

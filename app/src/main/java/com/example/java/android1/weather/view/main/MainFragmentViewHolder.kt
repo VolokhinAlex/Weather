@@ -21,13 +21,13 @@ class MainFragmentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
         condition = itemView.findViewById(R.id.card_city_temperature_condition)
     }
 
-    fun bind(weather: Weather, onItemClickListener: OnItemClickListener) {
+    fun bind(weather: Weather, onItemClickListener: ((Weather) -> Unit)?) {
         city.text = weather.city.city
         country.text = weather.city.country
         temperature.text = String.format("%s °", weather.temperature)
         condition.text = weather.condition
         itemView.setOnClickListener {
-            onItemClickListener.onItemClickListener(weather)
+            onItemClickListener?.invoke(weather)
         }
     }
 
