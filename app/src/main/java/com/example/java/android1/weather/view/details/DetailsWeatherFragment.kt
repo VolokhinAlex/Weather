@@ -27,7 +27,7 @@ class DetailsWeatherFragment : Fragment() {
     private val listener = object : WeatherLoaderListener {
         override fun onLoaded(weatherDTO: WeatherDTO) {
             displayWeather(weatherDTO)
-            setDataAdapter(weatherDTO)
+            setData(weatherDTO)
         }
 
         override fun onFailed(error: Throwable) {
@@ -93,22 +93,11 @@ class DetailsWeatherFragment : Fragment() {
     }
 
     /**
-     * The method gets the current time from the phone and sets the data to the hourly weather
-     * list from the current hour to 23 hours
+     * The method sets the hourly weather forecast data for the list in the Adapter
      */
 
-    private fun setDataAdapter(weatherDTO: WeatherDTO) {
-        val currentTime = DateFormat.format("HH", Calendar.getInstance().time)
-        var itemIdxFromList = 0
-        weatherDTO.forecasts?.get(0)?.hours?.forEach {
-            if (it.hour == currentTime) {
-                itemIdxFromList = it.hour.toInt()
-            }
-        }
-        val hoursList = weatherDTO.forecasts?.get(0)?.hours
-        // Getting rid of further null checks
-        hoursList?.subList(itemIdxFromList, hoursList.size)
-            ?.let { hourlyWeatherAdapter.setData(it) }
+    private fun setData(weatherDTO: WeatherDTO) {
+        weatherDTO.forecasts?.get(0)?.hours?.let { hourlyWeatherAdapter.setData(it) }
     }
 
     override fun onDestroyView() {

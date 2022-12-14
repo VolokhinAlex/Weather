@@ -4,7 +4,8 @@ class WeatherDTO(
     val now: Long,
     val fact: FactDTO?,
     val geo_object: GeoDTO?,
-    val forecasts: List<ForecastsDTO>?
+    val forecasts: List<ForecastsDTO>?,
+    val info: Info?
 )
 
 data class FactDTO(
@@ -32,6 +33,8 @@ data class GeoDTO(
 
 data class CountryDTO(val name: String)
 data class LocalityDTO(val name: String)
+data class Info(val tzinfo: CityInfo)
+data class CityInfo(val offset: Int?)
 
 data class HoursDTO(
     val hour: String,
