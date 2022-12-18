@@ -1,6 +1,10 @@
 package com.example.java.android1.weather.view.details
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -10,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.java.android1.weather.databinding.FragmentDetailsWeatherBinding
@@ -23,6 +28,30 @@ class DetailsWeatherFragment : Fragment() {
     private val mBinding get() = _binding!!
     private var mWeatherData: Weather? = null
     private val TAG = DetailsWeatherFragment::class.java.toString()
+    private val broadcastReceiver: BroadcastReceiver =  object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.getStringExtra(DETAILS_LOAD_RESULT_EXTRA)) {
+                DETAILS_RESPONSE_SUCCESS_EXTRA -> {
+                    val weatherDTO = intent.getParcelableExtra<WeatherDTO>(WEATHER_DATA)
+                    weatherDTO?.apply {
+                        displayWeather(this)
+                        setData(this)
+                    }
+                }
+                DETAILS_REQUEST_ERROR_EXTRA -> {
+                    Log.e("DETAILS_REQUEST_ERROR", intent.getStringExtra(
+                        DETAILS_REQUEST_ERROR_MESSAGE_EXTRA)!!
+                    )
+                }
+                DETAILS_URL_MALFORMED_EXTRA -> {
+                    Log.e("DETAILS_URL_MALFORMED", intent.getStringExtra(
+                        DETAILS_URL_MALFORMED_EXTRA_MESSAGE)!!
+                    )
+                }
+            }
+        }
+
+    }
 
     private val listener = object : WeatherLoaderListener {
         override fun onLoaded(weatherDTO: WeatherDTO) {
@@ -42,6 +71,7 @@ class DetailsWeatherFragment : Fragment() {
         arguments?.let {
             mWeatherData = it.getParcelable(ARG_WEATHER_DATA_KEY)
         }
+        LocalBroadcastManager.getInstance(requireActivity()).registerReceiver(broadcastReceiver, IntentFilter(DETAILS_INTENT_FILTER))
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -50,7 +80,11 @@ class DetailsWeatherFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentDetailsWeatherBinding.inflate(inflater, container, false)
-        mWeatherData = arguments?.getParcelable(ARG_WEATHER_DATA_KEY)
+        //mWeatherData = arguments?.getParcelable(ARG_WEATHER_DATA_KEY)
+        requireActivity().startService(Intent(requireActivity(), WeatherLoaderBroadcastReceiver::class.java)
+            .putExtra(WEATHER_LAT, mWeatherData?.city?.lat)
+            .putExtra(WEATHER_LON, mWeatherData?.city?.lon)
+        )
         val recyclerView: RecyclerView = mBinding.containerHourlyWeather
         recyclerView.adapter = hourlyWeatherAdapter
         val layoutManager = LinearLayoutManager(
@@ -58,10 +92,10 @@ class DetailsWeatherFragment : Fragment() {
             LinearLayoutManager.HORIZONTAL, false
         )
         recyclerView.layoutManager = layoutManager
-        mWeatherData?.city?.let {
-            val loader = WeatherLoader(listener, it.lat, it.lon, Locale.getDefault().toString())
-            loader.loadWeather()
-        }
+        //mWeatherData?.city?.let {
+        //    val loader = WeatherLoader(listener, it.lat, it.lon, Locale.getDefault().toString())
+        //    loader.loadWeather()
+        //}
         return mBinding.root
     }
 
@@ -103,6 +137,7 @@ class DetailsWeatherFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        LocalBroadcastManager.getInstance(requireActivity()).unregisterReceiver(broadcastReceiver)
     }
 
     companion object {
