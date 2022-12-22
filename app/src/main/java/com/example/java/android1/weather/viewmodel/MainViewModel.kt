@@ -3,29 +3,39 @@ package com.example.java.android1.weather.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.java.android1.weather.model.Repository
-import com.example.java.android1.weather.model.RepositoryImpl
-import java.util.concurrent.Executors
+import com.example.java.android1.weather.repository.MainRepository
+import com.example.java.android1.weather.repository.MainRepositoryImpl
+import com.example.java.android1.weather.repository.RemoteDataSource
 
 class MainViewModel(
     private val liveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val repository: Repository = RepositoryImpl()
+    private val repository: MainRepository = MainRepositoryImpl(RemoteDataSource())
 ) :
     ViewModel() {
 
-    fun getLiveData(): LiveData<AppState> {
-        return liveData
+    init {
+        getWeatherFromLocalSourceRus()
     }
 
-    fun getWeatherFromLocalSource() = getDataFromLocalSource()
-    fun getWeatherFromRemoteSource() = getDataFromLocalSource()
+    val liveDataSource: LiveData<AppState>
+        get() = liveData
 
-    private fun getDataFromLocalSource() {
+    fun getWeatherFromLocalSourceRus() = getDataFromLocalSource(isRussian = true)
+
+    fun getWeatherFromLocalSourceWorld() = getDataFromLocalSource(isRussian = false)
+
+    fun getWeatherFromRemoteSource() = getDataFromLocalSource(isRussian = true)
+
+    private fun getDataFromLocalSource(isRussian: Boolean) {
         liveData.value = AppState.Loading
-        Executors.newFixedThreadPool(5).submit {
+        Thread {
             Thread.sleep(1000)
-            liveData.postValue(AppState.Success(repository.getWeatherFromLocalStorage()))
-        }
+            val weatherData = when (isRussian) {
+                true -> repository.getWeatherFromLocalStorageRus()
+                false -> repository.getWeatherFromLocalStorageWorld()
+            }
+            liveData.postValue(AppState.Success(weatherData))
+        }.start()
     }
 
 }
