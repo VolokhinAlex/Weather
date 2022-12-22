@@ -10,9 +10,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.java.android1.weather.model.Weather
+import com.example.java.android1.weather.model.WeatherDTO
 
 @Composable
-fun CityCardView(weather: Weather) {
+fun CityCardView(weather: WeatherDTO) {
 
     Card(modifier = Modifier.padding(bottom = 15.dp)) {
         Row(
@@ -25,16 +26,16 @@ fun CityCardView(weather: Weather) {
             Column(
                 Modifier.padding(10.dp),
             ) {
-                Text(text = weather.city.city, fontSize = 17.sp)
-                Text(text = weather.city.country, fontSize = 17.sp)
+                Text(text = weather.geo_object?.locality?.name.toString(), fontSize = 17.sp)
+                Text(text = weather.geo_object?.country?.name.toString(), fontSize = 17.sp)
             }
 
             Column(
                 Modifier.padding(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "${weather.temperature}°", fontSize = 30.sp)
-                Text(text = weather.condition, fontSize = 17.sp)
+                Text(text = "${weather.fact?.temp}°", fontSize = 30.sp)
+                Text(text = weather.fact?.condition.toString(), fontSize = 17.sp)
             }
 
         }
@@ -45,5 +46,5 @@ fun CityCardView(weather: Weather) {
 @Preview(showBackground = true)
 @Composable
 fun MyViewPreview() {
-    CityCardView(Weather())
+    CityCardView(WeatherDTO(1L, null, null, null, null))
 }

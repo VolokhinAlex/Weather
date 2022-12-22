@@ -3,12 +3,13 @@ package com.example.java.android1.weather.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.java.android1.weather.model.Repository
-import com.example.java.android1.weather.model.RepositoryImpl
+import com.example.java.android1.weather.repository.MainRepository
+import com.example.java.android1.weather.repository.MainRepositoryImpl
+import com.example.java.android1.weather.repository.RemoteDataSource
 
 class MainViewModel(
     private val liveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val repository: Repository = RepositoryImpl()
+    private val repository: MainRepository = MainRepositoryImpl(RemoteDataSource())
 ) :
     ViewModel() {
 
@@ -30,7 +31,7 @@ class MainViewModel(
         Thread {
             Thread.sleep(1000)
             val weatherData = when (isRussian) {
-                true ->  repository.getWeatherFromLocalStorageRus()
+                true -> repository.getWeatherFromLocalStorageRus()
                 false -> repository.getWeatherFromLocalStorageWorld()
             }
             liveData.postValue(AppState.Success(weatherData))

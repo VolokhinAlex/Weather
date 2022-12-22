@@ -26,10 +26,12 @@ data class FactDTO(
 
 @Parcelize
 data class ForecastsDTO(
+    val date: String?,
     val date_ts: Long?,
     val sunrise: String?,
     val sunset: String?,
-    val hours: List<HoursDTO>?
+    val hours: List<HoursDTO>?,
+    val parts: Parts?
 ) : Parcelable
 
 @Parcelize
@@ -45,7 +47,7 @@ data class CountryDTO(val name: String) : Parcelable
 data class LocalityDTO(val name: String) : Parcelable
 
 @Parcelize
-data class Info(val tzinfo: CityInfo) : Parcelable
+data class Info(val tzinfo: CityInfo, val lat: Double, val lon: Double) : Parcelable
 
 @Parcelize
 data class CityInfo(val offset: Int?) : Parcelable
@@ -59,3 +61,25 @@ data class HoursDTO(
     val icon: String?,
     val condition: String?,
 ) : Parcelable
+
+@Parcelize
+data class Parts(
+    val day: DayOfWeather?,
+    val night: NightOfWeather?
+) : Parcelable
+
+@Parcelize
+data class DayOfWeather(
+    val temp_min: Int?,
+    val temp_avg: Int?,
+    val temp_max: Int?,
+    val icon: String?
+): Parcelable
+
+@Parcelize
+data class NightOfWeather(
+    val temp_min: Int?,
+    val temp_avg: Int?,
+    val temp_max: Int?,
+    val icon: String?
+): Parcelable
