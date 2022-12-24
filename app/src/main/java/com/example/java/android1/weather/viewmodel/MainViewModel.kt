@@ -1,41 +1,48 @@
 package com.example.java.android1.weather.viewmodel
 
-import androidx.lifecycle.LiveData
+import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.java.android1.weather.repository.MainRepository
-import com.example.java.android1.weather.repository.MainRepositoryImpl
-import com.example.java.android1.weather.repository.RemoteDataSource
+import androidx.lifecycle.viewModelScope
+import com.example.java.android1.weather.app.App
+import com.example.java.android1.weather.repository.WeatherLocalRepository
+import com.example.java.android1.weather.repository.WeatherLocalRepositoryImpl
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val liveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val repository: MainRepository = MainRepositoryImpl(RemoteDataSource())
-) :
-    ViewModel() {
+    val liveData: MutableLiveData<AppState> = MutableLiveData(),
+    private val localRepository: WeatherLocalRepository = WeatherLocalRepositoryImpl(App.weather_dao)
+) : ViewModel() {
 
     init {
-        getWeatherFromLocalSourceRus()
+        getWeatherFromLocalDataBaseRus()
     }
 
-    val liveDataSource: LiveData<AppState>
-        get() = liveData
+    fun getWeatherFromLocalSourceRus() = getWeatherFromLocalDataBaseRus()
 
-    fun getWeatherFromLocalSourceRus() = getDataFromLocalSource(isRussian = true)
+    fun getWeatherFromLocalSourceWorld() = getWeatherFromLocalDataBaseWorld()
 
-    fun getWeatherFromLocalSourceWorld() = getDataFromLocalSource(isRussian = false)
-
-    fun getWeatherFromRemoteSource() = getDataFromLocalSource(isRussian = true)
-
-    private fun getDataFromLocalSource(isRussian: Boolean) {
+    private fun getWeatherFromLocalDataBaseRus() {
         liveData.value = AppState.Loading
-        Thread {
-            Thread.sleep(1000)
-            val weatherData = when (isRussian) {
-                true -> repository.getWeatherFromLocalStorageRus()
-                false -> repository.getWeatherFromLocalStorageWorld()
+        val handler = android.os.Handler(Looper.getMainLooper())
+        viewModelScope.launch(Dispatchers.IO) {
+            val resultLocalRequest = localRepository.getWeatherFromLocalStorageRus()
+            handler.post {
+                liveData.value = AppState.Success(resultLocalRequest)
             }
-            liveData.postValue(AppState.Success(weatherData))
-        }.start()
+        }
+    }
+
+    private fun getWeatherFromLocalDataBaseWorld() {
+        liveData.value = AppState.Loading
+        val handler = android.os.Handler(Looper.getMainLooper())
+        viewModelScope.launch(Dispatchers.IO) {
+            val resultLocalRequest = localRepository.getWeatherFromLocalStorageWorld()
+            handler.post {
+                liveData.value = AppState.Success(resultLocalRequest)
+            }
+        }
     }
 
 }

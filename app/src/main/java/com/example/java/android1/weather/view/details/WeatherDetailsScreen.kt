@@ -1,15 +1,12 @@
 package com.example.java.android1.weather.view.details
 
-import android.os.Build
 import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -24,20 +21,14 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
-import com.example.java.android1.weather.model.ForecastsDTO
-import com.example.java.android1.weather.view.theme.DarkTextColor
-import com.example.java.android1.weather.view.theme.WeatherDetailsBoxColor
 import com.example.java.android1.weather.model.HoursDTO
 import com.example.java.android1.weather.model.WeatherDTO
 import com.example.java.android1.weather.view.main.Loading
 import com.example.java.android1.weather.view.main.NotFoundData
+import com.example.java.android1.weather.view.theme.DarkTextColor
+import com.example.java.android1.weather.view.theme.WeatherDetailsBoxColor
 import com.example.java.android1.weather.viewmodel.AppState
 import com.example.java.android1.weather.viewmodel.DetailsViewModel
-import java.text.SimpleDateFormat
-import java.time.OffsetDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.util.*
 
 @Composable
@@ -58,39 +49,12 @@ fun DetailsScreen(weatherDTO: WeatherDTO?) {
     detailsViewModel?.let {
         RenderData(it)
     }
-
 }
 
 @Composable
 fun DetailsWeatherContent(
     weatherDTO: WeatherDTO,
 ) {
-//    Column(
-//        modifier = Modifier
-//            .padding(10.dp)
-//            .fillMaxSize()
-//            .verticalScroll(rememberScrollState())
-//    ) {
-//        WeatherDTOTopScreenInfo(weatherDTO = weatherDTO)
-//
-//        Column(
-//            modifier = Modifier
-//                .padding(top = 30.dp)
-//                .align(Alignment.CenterHorizontally)
-//        ) {
-//            WeatherCenterScreenInfo(weatherDTO = weatherDTO)
-//        }
-//
-//        Text(text = "today", fontSize = 18.sp, modifier = Modifier.padding(bottom = 20.dp))
-//
-//        weatherDTO.forecasts?.get(0)?.hours?.let { HourlyListView(it) }
-//
-//        weatherDTO.forecasts?.subList(1, weatherDTO.forecasts?.size)
-//            ?.let { ForecastsForWeekScreen(it) }
-//
-//        WeatherDetailInfo(weatherDTO = weatherDTO)
-//
-//    }
     LazyColumn(
         modifier = Modifier
             .padding(10.dp)

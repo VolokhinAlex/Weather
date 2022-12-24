@@ -2,7 +2,6 @@ package com.example.java.android1.weather.repository
 
 import com.example.java.android1.weather.BuildConfig
 import com.example.java.android1.weather.model.WeatherDTO
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
