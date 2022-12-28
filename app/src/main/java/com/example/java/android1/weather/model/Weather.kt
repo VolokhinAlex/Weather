@@ -1,5 +1,9 @@
 package com.example.java.android1.weather.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Weather(
     val city: City = getDefaultCity(),
     val temperature: Int = 0,
@@ -12,21 +16,8 @@ data class Weather(
     val precipitation: Int = 0,
     val date: String = "",
     val sunrise: String = "",
-    val sunset: String = ""
-)
+    val sunset: String = "",
+    val pressure: Int = 0
+) : Parcelable
 
-fun getDefaultCity() = City("Новосибирск", 5.000, 5.000)
-
-fun getDefaultWeather() = Weather(
-    city = getDefaultCity(),
-    temperature = 26,
-    feelsLike = 30,
-    condition = "cloudy",
-    windSpeed = 0.9,
-    humidity = 81,
-    daytime = "d",
-    precipitation = 0,
-    date = "2022-12-02",
-    sunrise = "04:38",
-    sunset = "20:31"
-)
+fun getDefaultCity() = City("Новосибирск", "Россия", 5.000, 5.000)
