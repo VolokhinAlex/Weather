@@ -1,4 +1,4 @@
-package com.example.java.android1.weather.view
+package com.example.java.android1.weather.view.details
 
 import android.view.LayoutInflater
 import android.view.View
