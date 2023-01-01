@@ -1,4 +1,4 @@
-package com.example.java.android1.weather.view.main
+package com.example.java.android1.weather.view.widgets
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
@@ -9,12 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.java.android1.weather.model.Weather
 import com.example.java.android1.weather.model.WeatherDTO
 
 @Composable
 fun CityCardView(weather: WeatherDTO) {
-
     Card(modifier = Modifier.padding(bottom = 15.dp)) {
         Row(
             modifier = Modifier
@@ -40,7 +38,6 @@ fun CityCardView(weather: WeatherDTO) {
 
         }
     }
-
 }
 
 @Preview(showBackground = true)

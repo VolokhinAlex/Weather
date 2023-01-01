@@ -23,11 +23,11 @@ import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.example.java.android1.weather.model.HoursDTO
 import com.example.java.android1.weather.model.WeatherDTO
-import com.example.java.android1.weather.view.main.Loading
-import com.example.java.android1.weather.view.main.NotFoundData
 import com.example.java.android1.weather.view.theme.DarkTextColor
 import com.example.java.android1.weather.view.theme.WeatherDetailsBoxColor
-import com.example.java.android1.weather.viewmodel.AppState
+import com.example.java.android1.weather.view.widgets.ErrorMessage
+import com.example.java.android1.weather.view.widgets.Loading
+import com.example.java.android1.weather.app.AppState
 import com.example.java.android1.weather.viewmodel.DetailsViewModel
 import java.util.*
 
@@ -77,7 +77,7 @@ fun DetailsWeatherContent(
 
         }
 
-        val forecastsForWeekList = weatherDTO.forecasts?.subList(1, weatherDTO.forecasts?.size)
+        val forecastsForWeekList = weatherDTO.forecasts?.subList(1, weatherDTO.forecasts.size)
         if (forecastsForWeekList != null) {
             itemsIndexed(forecastsForWeekList) { _, item ->
                 item.date_ts?.let {
@@ -104,7 +104,7 @@ fun DetailsWeatherContent(
 fun RenderData(appState: AppState) {
     when (appState) {
         is AppState.Error -> {
-            NotFoundData()
+            appState.error.message?.let { ErrorMessage(text = it) }
         }
         AppState.Loading -> {
             Loading()

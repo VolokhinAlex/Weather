@@ -6,9 +6,6 @@ interface WeatherLocalRepository {
 
     fun getAllWeather(): List<WeatherDTO>
 
-    fun getWeatherFromLocalStorageRus(): List<WeatherDTO>
-    fun getWeatherFromLocalStorageWorld(): List<WeatherDTO>
-
     suspend fun insertWeather(weatherDTO: WeatherDTO)
 
     suspend fun update(weatherDTO: WeatherDTO)
