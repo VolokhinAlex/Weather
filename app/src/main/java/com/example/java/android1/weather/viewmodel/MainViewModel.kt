@@ -1,37 +1,104 @@
 package com.example.java.android1.weather.viewmodel
 
-import androidx.lifecycle.LiveData
+import android.location.Geocoder
+import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.java.android1.weather.model.Repository
-import com.example.java.android1.weather.model.RepositoryImpl
+import androidx.lifecycle.viewModelScope
+import com.example.java.android1.weather.app.App
+import com.example.java.android1.weather.app.AppState
+import com.example.java.android1.weather.app.LocationState
+import com.example.java.android1.weather.model.WeatherDTO
+import com.example.java.android1.weather.repository.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+private const val SERVER_ERROR = "Ошибка сервера"
 
 class MainViewModel(
-    private val liveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val repository: Repository = RepositoryImpl()
-) :
-    ViewModel() {
+    val liveData: MutableLiveData<AppState> = MutableLiveData(),
+    private val localRepository: WeatherLocalRepository = WeatherLocalRepositoryImpl(App.weather_dao),
+    private val remoteRepository: MainRepository = MainRepositoryImpl(RemoteDataSource()),
+    val locationState: MutableLiveData<LocationState> = MutableLiveData()
+) : ViewModel() {
 
-    fun getLiveData(): LiveData<AppState> {
-        return liveData
+    private val callback = object : Callback<WeatherDTO> {
+        override fun onResponse(call: Call<WeatherDTO>, response: Response<WeatherDTO>) {
+            val serverResponse = response.body()
+            liveData.value = if (serverResponse != null && response.isSuccessful) {
+                viewModelScope.launch(Dispatchers.IO) {
+                    localRepository.insertWeather(serverResponse)
+                }
+                AppState.Success(listOf(serverResponse))
+            } else {
+                AppState.Error(Throwable(SERVER_ERROR))
+            }
+        }
+
+        override fun onFailure(call: Call<WeatherDTO>, error: Throwable) {
+            liveData.value = AppState.Error(error)
+        }
     }
 
-    fun getWeatherFromLocalSourceRus() = getDataFromLocalSource(isRussian = true)
+    init {
+        getWeatherFromLocalDataBase()
+    }
 
-    fun getWeatherFromLocalSourceWorld() = getDataFromLocalSource(isRussian = false)
+    /**
+     * The data gets from the Room Database if this data is not empty
+     */
 
-    fun getWeatherFromRemoteSource() = getDataFromLocalSource(isRussian = true)
-
-    private fun getDataFromLocalSource(isRussian: Boolean) {
+    fun getWeatherFromLocalDataBase() {
         liveData.value = AppState.Loading
-        Thread {
-            Thread.sleep(1000)
-            val weatherData = when (isRussian) {
-                true ->  repository.getWeatherFromLocalStorageRus()
-                false -> repository.getWeatherFromLocalStorageWorld()
+        val handler = android.os.Handler(Looper.getMainLooper())
+        viewModelScope.launch(Dispatchers.IO) {
+            val resultLocalRequest = localRepository.getAllWeather()
+            handler.post {
+                liveData.value = AppState.Success(resultLocalRequest)
             }
-            liveData.postValue(AppState.Success(weatherData))
+        }
+    }
+
+    /**
+     * The data gets from Remote Repository using Retrofit. The data gets from the Yandex Weather API
+     */
+
+    fun getWeatherCityFromRemoteSource(latitude: Double, longitude: Double, lang: String) {
+        remoteRepository.getWeatherFromRemoteSource(
+            latitude,
+            longitude,
+            lang,
+            callback
+        )
+    }
+
+    /**
+     * The method is called from the search field in the MainScreen
+     */
+
+    fun getCityCoordination(geocoder: Geocoder, query: String) {
+        Thread {
+            val addresses = geocoder.getFromLocationName(query, 10)
+            if (addresses != null && addresses.size != 0) {
+                remoteRepository.getWeatherFromRemoteSource(
+                    addresses[0].latitude,
+                    addresses[0].longitude,
+                    "ru_RU",
+                    callback
+                )
+            }
         }.start()
+    }
+
+    fun getLocationSuccess(latitude: Double, longitude: Double) {
+        locationState.value = LocationState.Success(latitude, longitude)
+    }
+
+    fun getLocationNotEnabledGPS(message: String) {
+        locationState.value = LocationState.NotEnabledGPS(message)
     }
 
 }
