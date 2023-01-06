@@ -25,7 +25,10 @@ class MainFragment : Fragment() {
         fun newInstance() = MainFragment()
     }
 
-    private lateinit var viewModel: MainViewModel
+    private val viewModel: MainViewModel by lazy {
+        ViewModelProvider(this)[MainViewModel::class.java]
+    }
+
     private lateinit var mMainAdapter: MainFragmentAdapter
 
     override fun onCreateView(
@@ -33,21 +36,23 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMainBinding.inflate(inflater, container, false)
-        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
-        viewModel.getLiveData().observe(viewLifecycleOwner) { renderData(it) }
-        viewModel.getWeatherFromLocalSourceRus()
+        viewModel.apply {
+            this.liveDataSource.observe(viewLifecycleOwner) { renderData(it) }
+            this.getWeatherFromLocalSourceRus()
+        }
         mBinding.mainFragmentFAB.setOnClickListener { changeWeatherDataSet() }
         val recyclerView: RecyclerView = mBinding.containerListOfCities
-        mMainAdapter = MainFragmentAdapter(object : OnItemClickListener {
-            override fun onItemClickListener(weather: Weather) {
-                requireActivity().supportFragmentManager.beginTransaction()
-                    .replace(R.id.container, DetailsWeatherFragment.newInstance(weather))
-                    .addToBackStack(null).commit()
-            }
-        })
-        recyclerView.adapter = mMainAdapter
-        val layoutManager = LinearLayoutManager(requireActivity())
-        recyclerView.layoutManager = layoutManager
+        mMainAdapter = MainFragmentAdapter { weatherData ->
+            val bundle = Bundle()
+            bundle.putParcelable(DetailsWeatherFragment.ARG_WEATHER_DATA_KEY, weatherData)
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.container, DetailsWeatherFragment.newInstance(bundle))
+                .addToBackStack(null).commit()
+        }
+        recyclerView.apply {
+            this.adapter = mMainAdapter
+            this.layoutManager = LinearLayoutManager(requireActivity())
+        }
         return mBinding.root
     }
 
@@ -66,16 +71,16 @@ class MainFragment : Fragment() {
         when (appState) {
             is AppState.Error -> {
                 val weatherData = appState.error
-                mBinding.progressBar.visibility = View.GONE
-                mBinding.errorMessage.visibility = View.VISIBLE
+                mBinding.progressBar.makeGone()
+                mBinding.errorMessage.makeVisible()
                 mBinding.errorMessage.text = weatherData.message
             }
             AppState.Loading -> {
-                mBinding.progressBar.visibility = View.VISIBLE
+                mBinding.progressBar.makeVisible()
             }
             is AppState.Success -> {
                 val weatherData = appState.weatherData
-                mBinding.progressBar.visibility = View.GONE
+                mBinding.progressBar.makeGone()
                 mMainAdapter.setWeather(weatherData)
             }
         }
@@ -83,7 +88,16 @@ class MainFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        mMainAdapter.removeListener()
         _binding = null
     }
 
+}
+
+fun View.makeVisible() {
+    this.visibility = View.VISIBLE
+}
+
+fun View.makeGone() {
+    this.visibility = View.GONE
 }

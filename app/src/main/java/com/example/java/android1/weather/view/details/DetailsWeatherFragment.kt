@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.java.android1.weather.databinding.FragmentDetailsWeatherBinding
 import com.example.java.android1.weather.model.Weather
-
-private const val ARG_WEATHER_DATA_KEY = "weather_data_key"
+import kotlin.jvm.internal.DefaultConstructorMarker
+import kotlin.jvm.internal.Intrinsics
 
 class DetailsWeatherFragment : Fragment() {
 
@@ -32,7 +32,7 @@ class DetailsWeatherFragment : Fragment() {
         _binding = FragmentDetailsWeatherBinding.inflate(inflater, container, false)
         mWeatherData = arguments?.getParcelable(ARG_WEATHER_DATA_KEY)
         val recyclerView: RecyclerView = mBinding.containerHourlyWeather
-        val hourlyWeatherAdapter = HourlyWeatherAdapter(layoutInflater)
+        val hourlyWeatherAdapter = HourlyWeatherAdapter()
         recyclerView.adapter = hourlyWeatherAdapter
         val layoutManager = LinearLayoutManager(
             requireActivity(),
@@ -62,12 +62,12 @@ class DetailsWeatherFragment : Fragment() {
 
 
     companion object {
+        const val ARG_WEATHER_DATA_KEY = "weather_data_key"
+
         @JvmStatic
-        fun newInstance(weather: Weather) =
+        fun newInstance(bundle: Bundle) =
             DetailsWeatherFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(ARG_WEATHER_DATA_KEY, weather)
-                }
+                arguments = bundle
             }
     }
 }

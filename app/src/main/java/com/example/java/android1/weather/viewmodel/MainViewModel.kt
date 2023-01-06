@@ -12,9 +12,12 @@ class MainViewModel(
 ) :
     ViewModel() {
 
-    fun getLiveData(): LiveData<AppState> {
-        return liveData
-    }
+    val liveDataSource: LiveData<AppState>
+        get() = liveData
+
+//    fun getLiveData(): LiveData<AppState> {
+//        return liveData
+//    }
 
     fun getWeatherFromLocalSourceRus() = getDataFromLocalSource(isRussian = true)
 
