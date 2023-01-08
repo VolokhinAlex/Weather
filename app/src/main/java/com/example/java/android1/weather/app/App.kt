@@ -12,7 +12,6 @@ class App : Application() {
     }
 
     companion object {
-
         var appInstance: App? = null
         private const val DB_NAME = "Weather.db"
 
@@ -25,17 +24,6 @@ class App : Application() {
                 .build()
                 .weatherDao()
         }
-
-        val city_dao by lazy {
-            Room.databaseBuilder(
-                appInstance!!.applicationContext,
-                WeatherDataBase::class.java,
-                DB_NAME
-            )
-                .build()
-                .cityDao()
-        }
-
     }
 
 }

@@ -1,9 +1,6 @@
 package com.example.java.android1.weather.viewmodel
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.java.android1.weather.app.App.Companion.weather_dao
+import androidx.lifecycle.*
 import com.example.java.android1.weather.app.AppState
 import com.example.java.android1.weather.model.WeatherDTO
 import com.example.java.android1.weather.repository.*
@@ -16,15 +13,17 @@ import retrofit2.Response
 private const val SERVER_ERROR = "Ошибка сервера"
 
 class DetailsViewModel(
-    val detailsLiveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val repository: DetailsRepository = DetailsRepositoryImpl(RemoteDataSource()),
-    private val localRepository: WeatherLocalRepository = WeatherLocalRepositoryImpl(weather_dao)
+    private val repository: DetailsRepository,
+    private val localRepository: WeatherLocalRepository
 ) : ViewModel() {
+
+    private val _detailsWeatherData: MutableLiveData<AppState> = MutableLiveData()
+    val detailsWeatherData: LiveData<AppState> = _detailsWeatherData
 
     private val callback = object : Callback<WeatherDTO> {
         override fun onResponse(call: Call<WeatherDTO>, response: Response<WeatherDTO>) {
             val serverResponse = response.body()
-            detailsLiveData.value = if (serverResponse != null && response.isSuccessful) {
+            _detailsWeatherData.value = if (serverResponse != null && response.isSuccessful) {
                 insertWeatherToLocalBase(serverResponse)
                 AppState.Success(listOf(serverResponse))
             } else {
@@ -33,7 +32,7 @@ class DetailsViewModel(
         }
 
         override fun onFailure(call: Call<WeatherDTO>, error: Throwable) {
-            detailsLiveData.value = AppState.Error(error)
+            _detailsWeatherData.value = AppState.Error(error)
         }
     }
 
@@ -41,8 +40,8 @@ class DetailsViewModel(
      * The data gets from Remote Repository using Retrofit. The data gets from the Yandex Weather API
      */
 
-    fun getWeatherDetailFromRemoteServer(lat: Double, lon: Double, lang: String) {
-        detailsLiveData.value = AppState.Loading
+    fun getWeatherDetailsFromRemoteServer(lat: Double, lon: Double, lang: String) {
+        _detailsWeatherData.value = AppState.Loading
         repository.getWeatherDetailFromServer(lat, lon, lang, callback)
     }
 
@@ -55,4 +54,19 @@ class DetailsViewModel(
             localRepository.insertWeather(weatherData)
         }
 
+}
+
+
+@Suppress("UNCHECKED_CAST")
+class DetailsViewModelFactory(
+    private val repository: DetailsRepository,
+    private val localRepository: WeatherLocalRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return if (modelClass.isAssignableFrom(DetailsViewModel::class.java)) {
+            DetailsViewModel(repository, localRepository) as T
+        } else {
+            throw IllegalArgumentException("DetailsViewModel not found")
+        }
+    }
 }

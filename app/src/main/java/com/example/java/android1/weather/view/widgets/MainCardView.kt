@@ -15,19 +15,14 @@ import com.example.java.android1.weather.model.WeatherDTO
 fun CityCardView(weather: WeatherDTO) {
     Card(modifier = Modifier.padding(bottom = 15.dp)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Column(
-                Modifier.padding(10.dp),
-            ) {
+            Column(Modifier.padding(10.dp)) {
                 Text(text = weather.geo_object?.locality?.name.toString(), fontSize = 17.sp)
                 Text(text = weather.geo_object?.country?.name.toString(), fontSize = 17.sp)
             }
-
             Column(
                 Modifier.padding(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -35,13 +30,6 @@ fun CityCardView(weather: WeatherDTO) {
                 Text(text = "${weather.fact?.temp}°", fontSize = 30.sp)
                 Text(text = weather.fact?.condition.toString(), fontSize = 17.sp)
             }
-
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MyViewPreview() {
-    CityCardView(WeatherDTO(1L, null, null, null, null))
 }

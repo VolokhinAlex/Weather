@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -19,7 +18,12 @@ import com.example.java.android1.weather.view.theme.DarkTextColor50
 
 @Composable
 fun ForecastWeatherCard(icon: String, day: String, dayTempAvg: String, nightTempAvg: String) {
-    Card(shape = RoundedCornerShape(5.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+    Card(
+        shape = RoundedCornerShape(5.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
+    ) {
         Row(
             modifier = Modifier
                 .padding(start = 10.dp, end = 10.dp)
@@ -38,7 +42,7 @@ fun ForecastWeatherCard(icon: String, day: String, dayTempAvg: String, nightTemp
                     .data("https://yastatic.net/weather/i/icons/funky/dark/${icon}.svg")
                     .decoderFactory(SvgDecoder.Factory())
                     .build(),
-                contentDescription = "",
+                contentDescription = "weather icon",
                 modifier = Modifier.size(50.dp)
             )
             Row(modifier = Modifier.padding(start = 25.dp)) {
@@ -52,10 +56,4 @@ fun ForecastWeatherCard(icon: String, day: String, dayTempAvg: String, nightTemp
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewScreen() {
-    ForecastWeatherCard("ovc", "Monday", "15", "17")
 }

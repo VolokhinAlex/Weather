@@ -1,11 +1,7 @@
 package com.example.java.android1.weather.viewmodel
 
 import android.location.Geocoder
-import android.os.Looper
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.java.android1.weather.app.App
+import androidx.lifecycle.*
 import com.example.java.android1.weather.app.AppState
 import com.example.java.android1.weather.app.LocationState
 import com.example.java.android1.weather.model.WeatherDTO
@@ -19,16 +15,19 @@ import retrofit2.Response
 private const val SERVER_ERROR = "Ошибка сервера"
 
 class MainViewModel(
-    val liveData: MutableLiveData<AppState> = MutableLiveData(),
-    private val localRepository: WeatherLocalRepository = WeatherLocalRepositoryImpl(App.weather_dao),
-    private val remoteRepository: MainRepository = MainRepositoryImpl(RemoteDataSource()),
-    val locationState: MutableLiveData<LocationState> = MutableLiveData()
+    private val remoteRepository: MainRepository,
+    private val localRepository: WeatherLocalRepository
 ) : ViewModel() {
+
+    private val _weatherData: MutableLiveData<AppState> = MutableLiveData()
+    val weatherData: LiveData<AppState> = _weatherData
+    private val _weatherLocationData: MutableLiveData<LocationState> = MutableLiveData()
+    val weatherLocationData: LiveData<LocationState> = _weatherLocationData
 
     private val callback = object : Callback<WeatherDTO> {
         override fun onResponse(call: Call<WeatherDTO>, response: Response<WeatherDTO>) {
             val serverResponse = response.body()
-            liveData.value = if (serverResponse != null && response.isSuccessful) {
+            _weatherData.value = if (serverResponse != null && response.isSuccessful) {
                 viewModelScope.launch(Dispatchers.IO) {
                     localRepository.insertWeather(serverResponse)
                 }
@@ -39,7 +38,7 @@ class MainViewModel(
         }
 
         override fun onFailure(call: Call<WeatherDTO>, error: Throwable) {
-            liveData.value = AppState.Error(error)
+            _weatherData.value = AppState.Error(error)
         }
     }
 
@@ -52,13 +51,10 @@ class MainViewModel(
      */
 
     fun getWeatherFromLocalDataBase() {
-        liveData.value = AppState.Loading
-        val handler = android.os.Handler(Looper.getMainLooper())
+        _weatherData.value = AppState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val resultLocalRequest = localRepository.getAllWeather()
-            handler.post {
-                liveData.value = AppState.Success(resultLocalRequest)
-            }
+            _weatherData.postValue(AppState.Success(resultLocalRequest))
         }
     }
 
@@ -79,7 +75,7 @@ class MainViewModel(
      * The method is called from the search field in the MainScreen
      */
 
-    fun getCityCoordination(geocoder: Geocoder, query: String) {
+    fun getCoordinationByCity(geocoder: Geocoder, query: String) {
         Thread {
             val addresses = geocoder.getFromLocationName(query, 10)
             if (addresses != null && addresses.size != 0) {
@@ -93,12 +89,26 @@ class MainViewModel(
         }.start()
     }
 
-    fun getLocationSuccess(latitude: Double, longitude: Double) {
-        locationState.value = LocationState.Success(latitude, longitude)
+    fun getWeatherByLocation(latitude: Double, longitude: Double) {
+        _weatherLocationData.value = LocationState.Success(latitude, longitude)
     }
 
-    fun getLocationNotEnabledGPS(message: String) {
-        locationState.value = LocationState.NotEnabledGPS(message)
+    fun getWeatherByLocationError(message: String) {
+        _weatherLocationData.value = LocationState.NotEnabledGPS(message)
     }
 
+}
+
+@Suppress("UNCHECKED_CAST")
+class MainViewModelFactory(
+    private val repository: MainRepository,
+    private val localRepository: WeatherLocalRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+            MainViewModel(repository, localRepository) as T
+        } else {
+            throw IllegalArgumentException("MainViewModel not found")
+        }
+    }
 }
