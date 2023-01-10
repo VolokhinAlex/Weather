@@ -19,13 +19,16 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.example.java.android1.weather.app.AppState
+import com.example.java.android1.weather.R
 import com.example.java.android1.weather.app.LocationState
+import com.example.java.android1.weather.app.WeatherAppState
 import com.example.java.android1.weather.model.WeatherDTO
+import com.example.java.android1.weather.view.LanguageQuery
 import com.example.java.android1.weather.view.Screen
 import com.example.java.android1.weather.view.WEATHER_DATA_KEY
 import com.example.java.android1.weather.view.navigate
@@ -35,7 +38,7 @@ import com.example.java.android1.weather.view.search.SearchState
 import com.example.java.android1.weather.view.search.rememberSearchState
 import com.example.java.android1.weather.view.widgets.CityCardView
 import com.example.java.android1.weather.view.widgets.ErrorMessage
-import com.example.java.android1.weather.view.widgets.Loading
+import com.example.java.android1.weather.view.widgets.LoadingProgressBar
 import com.example.java.android1.weather.view.widgets.MessageDialog
 import com.example.java.android1.weather.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
@@ -63,6 +66,10 @@ fun HomeScreen(mainViewModel: MainViewModel, navController: NavController) {
 /**
  * The method checks the permission for the location, if the user has permission, the [getCurrentLocation] method is called
  * If the user does not have permission, he will be asked for permission again
+ * @param context - App context
+ * @param permissions - List of permissions
+ * @param launcher - To request location permission
+ * @param mainViewModel - Main View Model
  */
 
 private fun checkLocationPermission(
@@ -91,6 +98,8 @@ private fun checkLocationPermission(
  * And returns two states ->
  * 1. Success - return the lat, lon to Location State
  * 2. NotEnabledGPS - return the message to Location State and call the Message Dialog
+ * @param context - App context
+ * @param mainViewModel - Main View Mod
  */
 
 fun getCurrentLocation(context: Context, mainViewModel: MainViewModel) {
@@ -133,10 +142,10 @@ fun getCurrentLocation(context: Context, mainViewModel: MainViewModel) {
 fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewModel) {
     when (locationState) {
         is LocationState.Success -> {
-            mainViewModel.getWeatherCityFromRemoteSource(
+            mainViewModel.getWeatherCityFromRemoteServer(
                 locationState.lat,
                 locationState.lon,
-                Locale.getDefault().language
+                LanguageQuery.EN.languageQuery
             )
         }
         is LocationState.NotEnabledGPS -> {
@@ -146,10 +155,11 @@ fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewMode
             MessageDialog(
                 modifier = Modifier.padding(10.dp),
                 title = { Text(text = locationState.message) },
-                text = { Text(text = "You need to enable the GPS Tracker, else you can't get weather near your location") },
+                text = { Text(text = stringResource(id = R.string.not_enabled_gps)) },
                 confirmButton = {
-                    Text(text = "OK")
-                    dialogState.value = false
+                    Text(
+                        text = stringResource(id = R.string.confirm_btn),
+                        modifier = Modifier.clickable { dialogState.value = false })
                 },
                 dialogState = dialogState
             )
@@ -158,28 +168,28 @@ fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewMode
 }
 
 /**
- * The method handles weather conditions [AppState] that come from live data.
+ * The method handles weather conditions [WeatherAppState] that come from live data.
  * There are three states in total.
  * 1. Success -> The user has successfully received the city weather data from a local or remote repository.
  * 2. Loading -> Data in the receiving state. As soon as the server responds, the Success or Error state will return
  * 3. Error -> If the data that the user requested was not found or the connection with the server was severed
- * @param appState - The status that comes from the remote server
+ * @param weatherAppState - The status that comes from the remote server
  * @param navController - Controller for screen navigation
  * @param mainViewModel - Main View Model
  */
 
 @Composable
 fun RenderWeatherData(
-    appState: AppState,
+    weatherAppState: WeatherAppState,
     navController: NavController,
     mainViewModel: MainViewModel,
 ) {
-    when (appState) {
-        is AppState.Error -> appState.error.message?.let { ErrorMessage(it) }
-        is AppState.Success -> {
-            val weatherData = appState.weatherData
+    when (weatherAppState) {
+        is WeatherAppState.Error -> weatherAppState.error.message?.let { ErrorMessage(it) }
+        is WeatherAppState.Success -> {
+            val weatherData = weatherAppState.weatherData
             if (weatherData.isEmpty()) {
-                ErrorMessage(text = "No cities have been added yet")
+                ErrorMessage(text = stringResource(id = R.string.not_added_cities))
             }
             val state: SearchState = rememberSearchState()
             Column(
@@ -187,7 +197,7 @@ fun RenderWeatherData(
                     .fillMaxSize()
                     .padding(15.dp)
             ) {
-                SearchField(viewModel = mainViewModel, state = state)
+                SearchField(mainViewModel = mainViewModel, searchState = state)
                 var weatherList = weatherData.toMutableList()
                 when (state.searchDisplay) {
                     SearchDisplay.InitialResults -> {
@@ -201,7 +211,7 @@ fun RenderWeatherData(
                 CitiesListView(weatherList, navController)
             }
         }
-        AppState.Loading -> Loading()
+        WeatherAppState.Loading -> LoadingProgressBar()
     }
 }
 
@@ -242,7 +252,7 @@ private fun CitiesListView(
  * if permission is available, the city with the current weather will return.
  * Otherwise, permission to use geolocation will be requested again
  * View the method [getCurrentLocation] and [checkLocationPermission]
- * @param state - State of Search [SearchDisplay]
+ * @param searchState - State of Search [SearchDisplay]
  * @param geocoder - Needed to get the coordinates of the city by name
  */
 
@@ -251,8 +261,8 @@ private fun CitiesListView(
 @Composable
 private fun SearchField(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel,
-    state: SearchState,
+    mainViewModel: MainViewModel,
+    searchState: SearchState,
     context: Context = LocalContext.current,
     geocoder: MutableState<Geocoder> = remember {
         mutableStateOf(Geocoder(context))
@@ -262,39 +272,42 @@ private fun SearchField(
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             permissions.entries.forEach {
                 if (it.value) {
-                    getCurrentLocation(context, viewModel)
+                    getCurrentLocation(context, mainViewModel)
                 }
             }
         }
     SearchBar(
-        query = state.query,
-        onQueryChange = { state.query = it },
-        onSearchFocusChange = { state.focused = it },
-        onClearQuery = { state.query = TextFieldValue("") },
+        query = searchState.query,
+        onQueryChange = { searchState.query = it },
+        onSearchFocusChange = { searchState.focused = it },
+        onClearQuery = { searchState.query = TextFieldValue("") },
         onBack = {
-            state.query = TextFieldValue("")
-            viewModel.getWeatherFromLocalDataBase()
+            searchState.query = TextFieldValue("")
+            mainViewModel.getWeatherFromLocalDataBase()
         },
-        searching = state.searching,
-        focused = state.focused,
+        searching = searchState.searching,
+        focused = searchState.focused,
         modifier = modifier,
-        searchHint = "Enter a city to find",
+        searchHint = stringResource(id = R.string.search_hint),
         location = {
             checkLocationPermission(
                 context,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 requestPermissions,
-                viewModel
+                mainViewModel
             )
         }
     )
 
-    LaunchedEffect(state.query.text) {
-        state.searching = true
+    LaunchedEffect(searchState.query.text) {
+        searchState.searching = true
         delay(500)
-        if (state.query.text.length > 2) {
-            viewModel.getCoordinationByCity(query = state.query.text, geocoder = geocoder.value)
+        if (searchState.query.text.length > 2) {
+            mainViewModel.getCoordinationByCity(
+                query = searchState.query.text,
+                geocoder = geocoder.value
+            )
         }
-        state.searching = false
+        searchState.searching = false
     }
 }

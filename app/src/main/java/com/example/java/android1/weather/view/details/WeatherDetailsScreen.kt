@@ -29,13 +29,13 @@ import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.example.java.android1.weather.R
-import com.example.java.android1.weather.app.AppState
+import com.example.java.android1.weather.app.WeatherAppState
 import com.example.java.android1.weather.model.HoursDTO
 import com.example.java.android1.weather.model.WeatherDTO
-import com.example.java.android1.weather.view.theme.DarkTextColor
-import com.example.java.android1.weather.view.theme.WeatherDetailsBoxColor
+import com.example.java.android1.weather.view.LanguageQuery
+import com.example.java.android1.weather.view.theme.*
 import com.example.java.android1.weather.view.widgets.ErrorMessage
-import com.example.java.android1.weather.view.widgets.Loading
+import com.example.java.android1.weather.view.widgets.LoadingProgressBar
 import com.example.java.android1.weather.viewmodel.DetailsViewModel
 import java.util.*
 
@@ -57,7 +57,7 @@ fun DetailsScreen(
             detailsViewModel.getWeatherDetailsFromRemoteServer(
                 it.lat,
                 it.lon,
-                Locale.getDefault().toString()
+                LanguageQuery.EN.languageQuery
             )
         }
     }
@@ -68,38 +68,29 @@ fun DetailsScreen(
 
 /**
  * The method processes state from the remote server
- * @param appState - The state that came from the remote server. [AppState]
+ * @param weatherAppState - The state that came from the remote server. [WeatherAppState]
  * @param navController - To navigate back
  */
 
 @Composable
-fun RenderDetailsWeatherData(appState: AppState, navController: NavController) {
-    when (appState) {
-        is AppState.Error -> {
-            appState.error.message?.let { ErrorMessage(text = it) }
-        }
-        AppState.Loading -> {
-            Loading()
-        }
-        is AppState.Success -> {
-            val weatherDTO = appState.weatherData
-            Column(
+fun RenderDetailsWeatherData(weatherAppState: WeatherAppState, navController: NavController) {
+    when (weatherAppState) {
+        is WeatherAppState.Error -> weatherAppState.error.message?.let { ErrorMessage(text = it) }
+        WeatherAppState.Loading -> LoadingProgressBar()
+        is WeatherAppState.Success -> {
+            val weatherListData = weatherAppState.weatherData
+            DetailsWeatherContent(
                 modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxSize()
-            ) {
-                IconButton(
-                    onClick = {
-                        navController.navigateUp()
-                    }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = null,
-                        tint = Color.DarkGray
+                    .padding(
+                        start = DETAILS_SCREEN_PADDING_START_END,
+                        end = DETAILS_SCREEN_PADDING_START_END,
+                        top = DETAILS_SCREEN_PADDING_TOP_BOTTOM,
+                        bottom = DETAILS_SCREEN_PADDING_TOP_BOTTOM
                     )
-                }
-                DetailsWeatherContent(weatherDTO = weatherDTO[0])
-            }
+                    .fillMaxSize(),
+                weatherDTO = weatherListData[0],
+                navController = navController
+            )
         }
     }
 }
@@ -111,20 +102,23 @@ fun RenderDetailsWeatherData(appState: AppState, navController: NavController) {
 
 @Composable
 fun DetailsWeatherContent(
-    weatherDTO: WeatherDTO
+    modifier: Modifier,
+    weatherDTO: WeatherDTO,
+    navController: NavController
 ) {
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+    LazyColumn(modifier = modifier) {
         item {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                HeaderDetailsScreen(weatherDTO = weatherDTO)
+                HeaderDetailsScreen(weatherDTO = weatherDTO, navController = navController)
                 CenterDetailsScreen(weatherDTO = weatherDTO)
             }
             Text(
                 text = stringResource(id = R.string.today),
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = DarkTextColor
             )
             weatherDTO.forecasts?.get(0)?.hours?.let { HourlyListView(it) }
         }
@@ -144,8 +138,51 @@ fun DetailsWeatherContent(
             }
         }
         item {
-            WeatherDetailsInfo(weatherDTO = weatherDTO)
+            WeatherAdvancedInfo(weatherDTO = weatherDTO)
         }
+    }
+}
+
+/**
+ * The method of adding a city and date in the header of screen
+ * @param weatherDTO - Weather Data From Remote Server
+ * @param navController - To navigate back
+ */
+
+@Composable
+fun HeaderDetailsScreen(weatherDTO: WeatherDTO, navController: NavController) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        IconButton(
+            onClick = { navController.navigateUp() }) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Arrow Back",
+                tint = Color.DarkGray
+            )
+        }
+        Row(modifier = Modifier.padding(start = 40.dp)) {
+            Text(
+                text = "${weatherDTO.geo_object?.locality?.name}, ${weatherDTO.geo_object?.country?.name}",
+                fontSize = DETAILS_PRIMARY_TITLE_SIZE,
+                color = DarkTextColor
+            )
+        }
+    }
+    val date = Date((weatherDTO.now + weatherDTO.info?.tzinfo?.offset!!) * 1000L)
+    val day = DateFormat.format("EEEE", date)
+    val month = DateFormat.format("MMMM", date)
+    val calendar = Calendar.getInstance()
+    calendar.time = date
+    Row(modifier = Modifier.padding(bottom = 10.dp)) {
+        Text(
+            text = "${calendar.get(Calendar.DAY_OF_MONTH)} ${month}, $day",
+            fontSize = DETAILS_PRIMARY_TEXT_SIZE,
+            color = DarkTextColor
+        )
     }
 }
 
@@ -160,40 +197,19 @@ fun CenterDetailsScreen(weatherDTO: WeatherDTO) {
         contentScale = ContentScale.Inside,
         modifier = Modifier
             .size(100.dp)
-            .padding(bottom = 3.dp)
+            .padding(top = 5.dp, bottom = 5.dp)
     )
-    Text(text = "${weatherDTO.fact?.temp} °", fontSize = 60.sp, color = DarkTextColor)
-    Text(text = "${weatherDTO.fact?.condition}", fontSize = 25.sp)
-}
-
-/**
- * The method of adding a city and date in the header of screen
- * @param weatherDTO - Weather Data From Remote Server
- */
-
-@Composable
-fun HeaderDetailsScreen(weatherDTO: WeatherDTO) {
-    Row {
-        Text(
-            text = "${weatherDTO.geo_object?.locality?.name}, ",
-            fontSize = 25.sp,
-            color = DarkTextColor
-        )
-        Text(
-            text = "${weatherDTO.geo_object?.country?.name}",
-            fontSize = 25.sp,
-            color = DarkTextColor
-        )
-    }
-    val date = Date((weatherDTO.now + weatherDTO.info?.tzinfo?.offset!!) * 1000L)
-    val day = DateFormat.format("EEEE", date)
-    val month = DateFormat.format("MMMM", date)
-    val calendar = Calendar.getInstance()
-    calendar.time = date
-    Row(modifier = Modifier.padding(bottom = 10.dp)) {
-        Text(text = "${calendar.get(Calendar.DAY_OF_MONTH)} ${month}, ", fontSize = 20.sp)
-        Text(text = day.toString(), fontSize = 20.sp)
-    }
+    Text(
+        text = "${weatherDTO.fact?.temp}°",
+        fontSize = 60.sp,
+        color = DarkTextColor,
+        modifier = Modifier.padding(bottom = 5.dp)
+    )
+    Text(
+        text = "${weatherDTO.fact?.condition}",
+        fontSize = DETAILS_PRIMARY_TITLE_SIZE,
+        color = DarkTextColor
+    )
 }
 
 /**
@@ -216,7 +232,7 @@ fun HourlyListView(hours: List<HoursDTO>) {
  */
 
 @Composable
-fun WeatherDetailsInfo(weatherDTO: WeatherDTO) {
+fun WeatherAdvancedInfo(weatherDTO: WeatherDTO) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -228,21 +244,27 @@ fun WeatherDetailsInfo(weatherDTO: WeatherDTO) {
         ) {
             Row {
                 Column(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Text(text = "Sunrise", fontSize = 13.sp)
-                    weatherDTO.forecasts?.get(0)?.sunrise?.let {
+                    Text(
+                        text = stringResource(id = R.string.label_sunrise),
+                        fontSize = DETAILS_LABEL_TEXT_SIZE
+                    )
+                    weatherDTO.forecasts?.get(0)?.sunrise?.let { sunrise ->
                         Text(
-                            text = it,
-                            fontSize = 20.sp,
+                            text = sunrise,
+                            fontSize = DETAILS_PRIMARY_TEXT_SIZE,
                             color = DarkTextColor
                         )
                     }
                 }
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "Sunset", fontSize = 13.sp)
-                    weatherDTO.forecasts?.get(0)?.sunset?.let {
+                    Text(
+                        text = stringResource(id = R.string.label_sunset),
+                        fontSize = DETAILS_LABEL_TEXT_SIZE
+                    )
+                    weatherDTO.forecasts?.get(0)?.sunset?.let { sunset ->
                         Text(
-                            text = it,
-                            fontSize = 20.sp,
+                            text = sunset,
+                            fontSize = DETAILS_PRIMARY_TEXT_SIZE,
                             color = DarkTextColor
                         )
                     }
@@ -255,18 +277,24 @@ fun WeatherDetailsInfo(weatherDTO: WeatherDTO) {
         ) {
             Row {
                 Column(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Text(text = "Feels like", fontSize = 13.sp)
+                    Text(
+                        text = stringResource(id = R.string.label_feels_like),
+                        fontSize = DETAILS_LABEL_TEXT_SIZE
+                    )
                     Text(
                         text = "${weatherDTO.fact?.feels_like}°",
-                        fontSize = 20.sp,
+                        fontSize = DETAILS_PRIMARY_TEXT_SIZE,
                         color = DarkTextColor
                     )
                 }
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "Windy", fontSize = 13.sp)
+                    Text(
+                        text = stringResource(id = R.string.label_windy_speed),
+                        fontSize = DETAILS_LABEL_TEXT_SIZE
+                    )
                     Text(
                         text = "${weatherDTO.fact?.wind_speed}",
-                        fontSize = 20.sp,
+                        fontSize = DETAILS_PRIMARY_TEXT_SIZE,
                         color = DarkTextColor
                     )
                 }
@@ -278,18 +306,24 @@ fun WeatherDetailsInfo(weatherDTO: WeatherDTO) {
         ) {
             Row {
                 Column(modifier = Modifier.fillMaxWidth(0.5f)) {
-                    Text(text = "Humidity", fontSize = 13.sp)
+                    Text(
+                        text = stringResource(R.string.label_humidity),
+                        fontSize = DETAILS_LABEL_TEXT_SIZE
+                    )
                     Text(
                         text = "${weatherDTO.fact?.humidity}%",
-                        fontSize = 20.sp,
+                        fontSize = DETAILS_PRIMARY_TEXT_SIZE,
                         color = DarkTextColor
                     )
                 }
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "Pressure", fontSize = 13.sp)
+                    Text(
+                        text = stringResource(id = R.string.label_pressure),
+                        fontSize = DETAILS_LABEL_TEXT_SIZE
+                    )
                     Text(
                         text = "${weatherDTO.fact?.pressure_mm} mm",
-                        fontSize = 20.sp,
+                        fontSize = DETAILS_PRIMARY_TEXT_SIZE,
                         color = DarkTextColor
                     )
                 }

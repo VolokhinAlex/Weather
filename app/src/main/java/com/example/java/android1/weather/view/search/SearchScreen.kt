@@ -18,12 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.java.android1.weather.view.theme.SearchFieldColor
+import com.example.java.android1.weather.view.theme.SearchFieldHintColor
 
 /**
  * The method for remembering all search states
@@ -56,10 +57,9 @@ private fun SearchTextFieldHint(modifier: Modifier = Modifier, searchHint: Strin
         modifier = Modifier
             .fillMaxSize()
             .then(modifier)
-
     ) {
         Text(
-            color = Color(0xff757575),
+            color = SearchFieldHintColor,
             text = searchHint,
             textAlign = TextAlign.Center
         )
@@ -103,7 +103,7 @@ fun SearchTextField(
                         end = 16.dp
                     )
             ),
-        color = Color(0xffF5F5F5),
+        color = SearchFieldColor,
         shape = RoundedCornerShape(percent = 50),
     ) {
         Box(
@@ -114,7 +114,8 @@ fun SearchTextField(
                 SearchTextFieldHint(
                     modifier
                         .padding(start = 24.dp, end = 8.dp)
-                        .align(Alignment.Center), searchHint)
+                        .align(Alignment.Center), searchHint
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 BasicTextField(
@@ -175,7 +176,7 @@ fun SearchBar(
     onQueryChange: (TextFieldValue) -> Unit,
     onSearchFocusChange: (Boolean) -> Unit,
     onClearQuery: () -> Unit,
-    onBack: ()-> Unit,
+    onBack: () -> Unit,
     searching: Boolean,
     focused: Boolean,
     modifier: Modifier = Modifier,
@@ -191,7 +192,7 @@ fun SearchBar(
 
         AnimatedVisibility(visible = focused) {
             IconButton(
-                modifier = Modifier.padding(start =2.dp),
+                modifier = Modifier.padding(start = 2.dp),
                 onClick = {
                     focusManager.clearFocus()
                     keyboardController?.hide()

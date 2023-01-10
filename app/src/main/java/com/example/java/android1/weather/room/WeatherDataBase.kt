@@ -9,7 +9,5 @@ import androidx.room.RoomDatabase
     exportSchema = false
 )
 abstract class WeatherDataBase : RoomDatabase() {
-
     abstract fun weatherDao(): WeatherDao
-
 }

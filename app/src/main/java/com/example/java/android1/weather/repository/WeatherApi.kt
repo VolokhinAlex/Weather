@@ -6,7 +6,15 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Query
 
+/**
+ * The interface for interacting with Yandex API.
+ */
+
 interface WeatherApi {
+
+    /**
+     * The method for getting a details weather of the city
+     */
 
     @GET("v2/forecast")
     fun getDetailsWeather(
