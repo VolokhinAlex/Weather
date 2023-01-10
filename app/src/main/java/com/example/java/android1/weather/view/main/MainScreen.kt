@@ -52,8 +52,9 @@ import java.util.*
 
 @Composable
 fun HomeScreen(mainViewModel: MainViewModel, navController: NavController) {
+    val searchState: SearchState = rememberSearchState()
     mainViewModel.weatherData.observeAsState().value?.let {
-        RenderWeatherData(it, navController, mainViewModel)
+        RenderWeatherData(it, navController, mainViewModel, searchState)
     }
     mainViewModel.weatherLocationData.observeAsState().value?.let {
         RenderLocationData(it, mainViewModel)
@@ -102,7 +103,7 @@ private fun checkLocationPermission(
  * @param mainViewModel - Main View Mod
  */
 
-fun getCurrentLocation(context: Context, mainViewModel: MainViewModel) {
+private fun getCurrentLocation(context: Context, mainViewModel: MainViewModel) {
     if (ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -139,7 +140,7 @@ fun getCurrentLocation(context: Context, mainViewModel: MainViewModel) {
  */
 
 @Composable
-fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewModel) {
+private fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewModel) {
     when (locationState) {
         is LocationState.Success -> {
             mainViewModel.getWeatherCityFromRemoteServer(
@@ -176,43 +177,60 @@ fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewMode
  * @param weatherAppState - The status that comes from the remote server
  * @param navController - Controller for screen navigation
  * @param mainViewModel - Main View Model
+ * @param searchState - State of Search [SearchDisplay]
  */
 
 @Composable
-fun RenderWeatherData(
+private fun RenderWeatherData(
     weatherAppState: WeatherAppState,
     navController: NavController,
     mainViewModel: MainViewModel,
+    searchState: SearchState
 ) {
     when (weatherAppState) {
-        is WeatherAppState.Error -> weatherAppState.error.message?.let { ErrorMessage(it) }
+        is WeatherAppState.Error -> weatherAppState.error.localizedMessage?.let { ErrorMessage(text = it) }
+        WeatherAppState.Loading -> LoadingProgressBar()
         is WeatherAppState.Success -> {
-            val weatherData = weatherAppState.weatherData
-            if (weatherData.isEmpty()) {
+            val weatherListDto = weatherAppState.weatherData
+            if (weatherListDto.isEmpty()) {
                 ErrorMessage(text = stringResource(id = R.string.not_added_cities))
             }
-            val state: SearchState = rememberSearchState()
+            searchState.searchResults = weatherListDto
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(15.dp)
             ) {
-                SearchField(mainViewModel = mainViewModel, searchState = state)
-                var weatherList = weatherData.toMutableList()
-                when (state.searchDisplay) {
-                    SearchDisplay.InitialResults -> {
-                        weatherList = weatherData.toMutableList()
-                    }
-                    SearchDisplay.NoResults -> {
-                        weatherList.clear()
-                    }
-                    else -> {}
-                }
-                CitiesListView(weatherList, navController)
+                SearchField(mainViewModel = mainViewModel, searchState = searchState)
+                RenderSearchData(
+                    searchState = searchState,
+                    listWeatherDto = weatherListDto.toMutableList(),
+                    navController = navController
+                )
             }
         }
-        WeatherAppState.Loading -> LoadingProgressBar()
     }
+}
+
+/**
+ * A method for processing data that came from the user's search
+ * @param searchState - State of Search [SearchDisplay]
+ * @param listWeatherDto - List of cities with weather.
+ * @param navController - Controller for screen navigation
+ */
+
+@Composable
+private fun RenderSearchData(
+    searchState: SearchState,
+    listWeatherDto: MutableList<WeatherDTO>,
+    navController: NavController
+) {
+    when (searchState.searchDisplay) {
+        SearchDisplay.InitialResults -> listWeatherDto.toList()
+        SearchDisplay.NoResults -> listWeatherDto.clear()
+        SearchDisplay.Results -> listWeatherDto.toList()
+    }
+    CitiesListView(weather = listWeatherDto, navController = navController)
 }
 
 /**
@@ -298,7 +316,6 @@ private fun SearchField(
             )
         }
     )
-
     LaunchedEffect(searchState.query.text) {
         searchState.searching = true
         delay(500)

@@ -7,7 +7,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
@@ -39,7 +41,7 @@ fun ForecastWeatherCard(icon: String, day: String, dayTempAvg: String, nightTemp
                 text = day,
                 fontSize = FORECASTS_CARD_TEXT_SIZE,
                 color = DarkTextColor,
-                modifier = Modifier.padding(end = 25.dp)
+                modifier = Modifier.size(width = 100.dp, height = 25.dp)
             )
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -47,14 +49,20 @@ fun ForecastWeatherCard(icon: String, day: String, dayTempAvg: String, nightTemp
                     .decoderFactory(SvgDecoder.Factory())
                     .build(),
                 contentDescription = "weather icon",
-                modifier = Modifier.size(50.dp)
+                modifier = Modifier.size(50.dp),
+                contentScale = ContentScale.Crop
             )
-            Row(modifier = Modifier.padding(start = 25.dp)) {
+            Row(
+                modifier = Modifier
+                    .size(width = 100.dp, height = 25.dp)
+                    .padding(start = 25.dp)
+            ) {
                 Text(
                     text = "${dayTempAvg}°",
                     fontSize = FORECASTS_CARD_TEXT_SIZE,
                     color = DarkTextColor,
-                    modifier = Modifier.padding(end = 5.dp)
+                    modifier = Modifier.padding(end = 5.dp),
+                    textAlign = TextAlign.End
                 )
                 Text(
                     text = "${nightTempAvg}°",

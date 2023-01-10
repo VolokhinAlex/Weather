@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.java.android1.weather.model.WeatherDTO
 import com.example.java.android1.weather.view.theme.SearchFieldColor
 import com.example.java.android1.weather.view.theme.SearchFieldHintColor
 
@@ -35,12 +36,14 @@ fun rememberSearchState(
     query: TextFieldValue = TextFieldValue(""),
     focused: Boolean = false,
     searching: Boolean = false,
+    searchResults: List<WeatherDTO> = emptyList()
 ): SearchState {
     return remember {
         SearchState(
             query = query,
             focused = focused,
             searching = searching,
+            searchResults = searchResults
         )
     }
 }
@@ -48,7 +51,6 @@ fun rememberSearchState(
 /**
  * The method for showing hint in the search text field
  */
-
 
 @Composable
 private fun SearchTextFieldHint(modifier: Modifier = Modifier, searchHint: String) {

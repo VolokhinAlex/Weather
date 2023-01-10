@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
@@ -236,7 +233,10 @@ fun WeatherAdvancedInfo(weatherDTO: WeatherDTO) {
     Column(
         Modifier
             .fillMaxWidth()
-            .background(color = WeatherDetailsBoxColor, shape = RoundedCornerShape(15.dp))
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(5.dp)
+            )
             .padding(15.dp)
     ) {
         Column(

@@ -11,7 +11,6 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 val DarkTextColor = Color(0xFF0F1E31)
-val WeatherDetailsBoxColor = Color(0xFFF7F7F7)
 val DarkTextColor50 = Color(0xFF000000)
 
 val SearchFieldHintColor = Color(0xff757575)
