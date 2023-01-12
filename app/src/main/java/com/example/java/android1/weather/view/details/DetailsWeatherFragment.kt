@@ -1,23 +1,18 @@
 package com.example.java.android1.weather.view.details
 
-import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.java.android1.weather.databinding.FragmentDetailsWeatherBinding
+import com.example.java.android1.weather.model.HoursDTO
 import com.example.java.android1.weather.model.Weather
 import com.example.java.android1.weather.model.WeatherDTO
 import java.util.*
@@ -28,116 +23,41 @@ class DetailsWeatherFragment : Fragment() {
     private val mBinding get() = _binding!!
     private var mWeatherData: Weather? = null
     private val TAG = DetailsWeatherFragment::class.java.toString()
-    private val broadcastReceiver: BroadcastReceiver =  object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.getStringExtra(DETAILS_LOAD_RESULT_EXTRA)) {
-                DETAILS_RESPONSE_SUCCESS_EXTRA -> {
-                    val weatherDTO = intent.getParcelableExtra<WeatherDTO>(WEATHER_DATA)
-                    weatherDTO?.apply {
-                        displayWeather(this)
-                        setData(this)
-                    }
-                }
-                DETAILS_REQUEST_ERROR_EXTRA -> {
-                    Log.e("DETAILS_REQUEST_ERROR", intent.getStringExtra(
-                        DETAILS_REQUEST_ERROR_MESSAGE_EXTRA)!!
-                    )
-                }
-                DETAILS_URL_MALFORMED_EXTRA -> {
-                    Log.e("DETAILS_URL_MALFORMED", intent.getStringExtra(
-                        DETAILS_URL_MALFORMED_EXTRA_MESSAGE)!!
-                    )
-                }
-            }
-        }
-
-    }
-
-    private val listener = object : WeatherLoaderListener {
-        override fun onLoaded(weatherDTO: WeatherDTO) {
-            displayWeather(weatherDTO)
-            setData(weatherDTO)
-        }
-
-        override fun onFailed(error: Throwable) {
-            Log.e(TAG, error.toString())
-        }
-    }
-
-    private val hourlyWeatherAdapter = HourlyWeatherAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             mWeatherData = it.getParcelable(ARG_WEATHER_DATA_KEY)
         }
-        LocalBroadcastManager.getInstance(requireActivity()).registerReceiver(broadcastReceiver, IntentFilter(DETAILS_INTENT_FILTER))
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentDetailsWeatherBinding.inflate(inflater, container, false)
-        //mWeatherData = arguments?.getParcelable(ARG_WEATHER_DATA_KEY)
-        requireActivity().startService(Intent(requireActivity(), WeatherLoaderBroadcastReceiver::class.java)
-            .putExtra(WEATHER_LAT, mWeatherData?.city?.lat)
-            .putExtra(WEATHER_LON, mWeatherData?.city?.lon)
-        )
-        val recyclerView: RecyclerView = mBinding.containerHourlyWeather
-        recyclerView.adapter = hourlyWeatherAdapter
-        val layoutManager = LinearLayoutManager(
-            requireActivity(),
-            LinearLayoutManager.HORIZONTAL, false
-        )
-        recyclerView.layoutManager = layoutManager
-        //mWeatherData?.city?.let {
-        //    val loader = WeatherLoader(listener, it.lat, it.lon, Locale.getDefault().toString())
-        //    loader.loadWeather()
-        //}
-        return mBinding.root
-    }
+    ) = ComposeView(context = requireActivity()).apply {
+        mWeatherData = arguments?.getParcelable(ARG_WEATHER_DATA_KEY)
+        mWeatherData?.city?.let {
+            val loader = WeatherLoader(object : WeatherLoaderListener {
 
-    /**
-     * The method is for setting data in the UI
-     */
+                override fun onLoaded(weatherDTO: WeatherDTO) {
+                    setContent {
+                        DetailsWeatherContent(weatherDTO)
+                    }
+                }
 
-    @SuppressLint("SetTextI18n", "SimpleDateFormat")
-    private fun displayWeather(weatherDTO: WeatherDTO) {
-        val date = Date(weatherDTO.now * 1000L)
-        val day = DateFormat.format("EEEE", date)
-        val month = DateFormat.format("MMMM", date)
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        with(mBinding) {
-            currentCity.text = "${weatherDTO.geo_object?.locality?.name}, "
-            currentCountry.text = weatherDTO.geo_object?.country?.name
-            currentDay.text = day
-            currentDate.text = "${calendar.get(Calendar.DAY_OF_MONTH)} ${month}, "
-            currentWindySpeed.text = String.format("%s m/s", weatherDTO.fact?.wind_speed)
-            currentHumidity.text = String.format("%s %%", weatherDTO.fact?.humidity)
-            currentPressure.text = String.format("%s mb", weatherDTO.fact?.pressure_mm)
-            currentTemperature.text = String.format("%s °", weatherDTO.fact?.temp)
-            currentFeelsLike.text = String.format("%s °", weatherDTO.fact?.feels_like)
-            currentCondition.text = weatherDTO.fact?.condition
-            currentSunrise.text = weatherDTO.forecasts?.get(0)?.sunrise
-            currentSunset.text = weatherDTO.forecasts?.get(0)?.sunset
+                override fun onFailed(error: Throwable) {
+                    Log.e(TAG, error.toString())
+                }
+
+            }, it.lat, it.lon, Locale.getDefault().toString())
+            loader.loadWeather()
         }
-    }
-
-    /**
-     * The method sets the hourly weather forecast data for the list in the Adapter
-     */
-
-    private fun setData(weatherDTO: WeatherDTO) {
-        weatherDTO.forecasts?.get(0)?.hours?.let { hourlyWeatherAdapter.setData(it) }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        LocalBroadcastManager.getInstance(requireActivity()).unregisterReceiver(broadcastReceiver)
     }
 
     companion object {
@@ -148,5 +68,15 @@ class DetailsWeatherFragment : Fragment() {
             DetailsWeatherFragment().apply {
                 arguments = bundle
             }
+    }
+}
+
+@Composable
+fun HourlyListView(hours: List<HoursDTO>) {
+    LazyRow {
+        itemsIndexed(hours) { index, items ->
+            HourlyWeatherItem(items)
+            Log.e("", items.toString())
+        }
     }
 }
