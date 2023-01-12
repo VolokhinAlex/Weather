@@ -1,6 +1,7 @@
 package com.example.java.android1.weather.viewmodel
 
 import androidx.lifecycle.*
+import com.example.java.android1.weather.app.App
 import com.example.java.android1.weather.app.WeatherAppState
 import com.example.java.android1.weather.model.WeatherDTO
 import com.example.java.android1.weather.repository.*
@@ -57,13 +58,13 @@ class DetailsViewModel(
 }
 
 @Suppress("UNCHECKED_CAST")
-class DetailsViewModelFactory(
-    private val detailsRepository: DetailsRepository,
-    private val localRepository: WeatherLocalRepository
-) : ViewModelProvider.Factory {
+class DetailsViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return if (modelClass.isAssignableFrom(DetailsViewModel::class.java)) {
-            DetailsViewModel(detailsRepository, localRepository) as T
+            DetailsViewModel(
+                DetailsRepositoryImpl(RemoteDataSource()),
+                WeatherLocalRepositoryImpl(App.weather_dao)
+            ) as T
         } else {
             throw IllegalArgumentException("DetailsViewModel not found")
         }

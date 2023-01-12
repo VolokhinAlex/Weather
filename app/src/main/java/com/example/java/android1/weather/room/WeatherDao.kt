@@ -4,7 +4,6 @@ import androidx.room.*
 
 @Dao
 interface WeatherDao {
-
     @Query("SELECT * FROM weather_table")
     fun all(): List<WeatherEntity>
 
@@ -14,4 +13,6 @@ interface WeatherDao {
     @Update
     fun update(entity: WeatherEntity)
 
+    @Delete
+    fun delete(entity: WeatherEntity)
 }

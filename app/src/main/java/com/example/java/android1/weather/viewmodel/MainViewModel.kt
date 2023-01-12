@@ -2,15 +2,15 @@ package com.example.java.android1.weather.viewmodel
 
 import android.location.Geocoder
 import android.os.Handler
-import android.os.Looper
+import android.os.HandlerThread
 import androidx.lifecycle.*
+import com.example.java.android1.weather.app.App
 import com.example.java.android1.weather.app.LocationState
 import com.example.java.android1.weather.app.WeatherAppState
 import com.example.java.android1.weather.model.WeatherDTO
 import com.example.java.android1.weather.repository.*
 import com.example.java.android1.weather.view.LanguageQuery
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -21,6 +21,7 @@ class MainViewModel(
     private val remoteRepository: MainRepository,
     private val localRepository: WeatherLocalRepository
 ) : ViewModel() {
+    private val coordinationHandlerThreadName = "CoordinationHandlerThread"
 
     private val _weatherData: MutableLiveData<WeatherAppState> = MutableLiveData()
     val weatherData: LiveData<WeatherAppState> = _weatherData
@@ -40,10 +41,6 @@ class MainViewModel(
         override fun onFailure(call: Call<WeatherDTO>, error: Throwable) {
             _weatherData.value = WeatherAppState.Error(error)
         }
-    }
-
-    init {
-        getWeatherFromLocalDataBase()
     }
 
     /**
@@ -76,20 +73,20 @@ class MainViewModel(
      */
 
     fun getCoordinationByCity(geocoder: Geocoder, query: String) {
-        val handler = Handler(Looper.getMainLooper())
-        Thread {
+        val coordinationHandlerThread = HandlerThread(coordinationHandlerThreadName)
+        coordinationHandlerThread.start()
+        val handler = Handler(coordinationHandlerThread.looper)
+        handler.post {
             val addresses = geocoder.getFromLocationName(query, 10)
             if (addresses != null && addresses.size != 0) {
-                handler.post {
-                    remoteRepository.getWeatherFromRemoteServer(
-                        addresses[0].latitude,
-                        addresses[0].longitude,
-                        LanguageQuery.EN.languageQuery,
-                        callback
-                    )
-                }
+                remoteRepository.getWeatherFromRemoteServer(
+                    addresses[0].latitude,
+                    addresses[0].longitude,
+                    LanguageQuery.EN.languageQuery,
+                    callback
+                )
             }
-        }.start()
+        }
     }
 
     fun getWeatherByLocation(latitude: Double, longitude: Double) {
@@ -103,13 +100,13 @@ class MainViewModel(
 }
 
 @Suppress("UNCHECKED_CAST")
-class MainViewModelFactory(
-    private val remoteRepository: MainRepository,
-    private val localRepository: WeatherLocalRepository
-) : ViewModelProvider.Factory {
+class MainViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            MainViewModel(remoteRepository, localRepository) as T
+            MainViewModel(
+                MainRepositoryImpl(RemoteDataSource()),
+                WeatherLocalRepositoryImpl(App.weather_dao)
+            ) as T
         } else {
             throw IllegalArgumentException("MainViewModel not found")
         }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -143,11 +144,13 @@ private fun getCurrentLocation(context: Context, mainViewModel: MainViewModel) {
 private fun RenderLocationData(locationState: LocationState, mainViewModel: MainViewModel) {
     when (locationState) {
         is LocationState.Success -> {
-            mainViewModel.getWeatherCityFromRemoteServer(
-                locationState.lat,
-                locationState.lon,
-                LanguageQuery.EN.languageQuery
-            )
+            LaunchedEffect(key1 = true) {
+                mainViewModel.getWeatherCityFromRemoteServer(
+                    locationState.lat,
+                    locationState.lon,
+                    LanguageQuery.EN.languageQuery
+                )
+            }
         }
         is LocationState.NotEnabledGPS -> {
             val dialogState = remember {
@@ -191,11 +194,11 @@ private fun RenderWeatherData(
         is WeatherAppState.Error -> weatherAppState.error.localizedMessage?.let { ErrorMessage(text = it) }
         WeatherAppState.Loading -> LoadingProgressBar()
         is WeatherAppState.Success -> {
-            val weatherListDto = weatherAppState.weatherData
-            if (weatherListDto.isEmpty()) {
+            val weatherListCities = weatherAppState.weatherData
+            if (weatherListCities.isEmpty()) {
                 ErrorMessage(text = stringResource(id = R.string.not_added_cities))
             }
-            searchState.searchResults = weatherListDto
+            searchState.searchResults = weatherListCities
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -204,7 +207,7 @@ private fun RenderWeatherData(
                 SearchField(mainViewModel = mainViewModel, searchState = searchState)
                 RenderSearchData(
                     searchState = searchState,
-                    listWeatherDto = weatherListDto.toMutableList(),
+                    weatherListCities = weatherListCities.toMutableList(),
                     navController = navController
                 )
             }
@@ -215,47 +218,53 @@ private fun RenderWeatherData(
 /**
  * A method for processing data that came from the user's search
  * @param searchState - State of Search [SearchDisplay]
- * @param listWeatherDto - List of cities with weather.
+ * @param weatherListCities - List of cities with weather.
  * @param navController - Controller for screen navigation
  */
 
 @Composable
 private fun RenderSearchData(
     searchState: SearchState,
-    listWeatherDto: MutableList<WeatherDTO>,
+    weatherListCities: MutableList<WeatherDTO>,
     navController: NavController
 ) {
     when (searchState.searchDisplay) {
-        SearchDisplay.InitialResults -> listWeatherDto.toList()
-        SearchDisplay.NoResults -> listWeatherDto.clear()
-        SearchDisplay.Results -> listWeatherDto.toList()
+        SearchDisplay.InitialResults -> weatherListCities.toList()
+        SearchDisplay.NoResults -> weatherListCities.clear()
+        SearchDisplay.Results -> weatherListCities.toList()
     }
-    CitiesListView(weather = listWeatherDto, navController = navController)
+    CitiesListView(
+        weatherListCities = weatherListCities,
+        navController = navController
+    )
 }
 
 /**
  * The method is called if the user has received the weather data successfully. see the [RenderWeatherData] rendering method (Success).
  * The method creates a list of cities with weather based on data that came from a local or remote repository.
- * @param weather - List of cities with weather.
+ * @param weatherListCities - List of cities with weather.
  * @param navController - Navigation Controller for interaction between Home Screen and Details Screen
  */
 
 @Composable
 private fun CitiesListView(
-    weather: List<WeatherDTO>,
-    navController: NavController,
+    weatherListCities: List<WeatherDTO>,
+    navController: NavController
 ) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 10.dp)
     ) {
-        itemsIndexed(weather) { _, item ->
+        itemsIndexed(weatherListCities) { _, item ->
             Surface(modifier = Modifier
                 .clickable {
                     val cityDataBundle = Bundle()
                     cityDataBundle.putParcelable(WEATHER_DATA_KEY, item)
-                    navController.navigate(Screen.DetailWeatherScreen.route, cityDataBundle)
+                    navController.navigate(
+                        Screen.DetailWeatherScreen.route,
+                        cityDataBundle
+                    )
                 }) {
                 CityCardView(item)
             }
