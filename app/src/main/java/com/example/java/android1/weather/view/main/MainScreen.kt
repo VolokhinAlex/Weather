@@ -26,7 +26,7 @@ import com.example.java.android1.weather.viewmodel.MainViewModel
 
 @Composable
 fun HomeScreen(viewModel: MainViewModel, navController: NavController) {
-    val homeViewModel by viewModel.liveDataSource.observeAsState()
+    val homeViewModel by viewModel.liveData.observeAsState()
     val cityState = remember {
         mutableStateOf("World")
     }
