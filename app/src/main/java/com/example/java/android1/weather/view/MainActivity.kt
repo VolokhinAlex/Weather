@@ -24,16 +24,16 @@ import com.example.java.android1.weather.viewmodel.MainViewModelFactory
 const val WEATHER_DATA_KEY = "Weather.Data.Key"
 
 class MainActivity : ComponentActivity() {
-
+    private val remoteDataSource = RemoteDataSource()
     private val homeViewModel: MainViewModel by viewModels {
         MainViewModelFactory(
-            MainRepositoryImpl(RemoteDataSource()),
+            MainRepositoryImpl(remoteDataSource),
             WeatherLocalRepositoryImpl(weather_dao)
         )
     }
     private val detailsViewModel: DetailsViewModel by viewModels {
         DetailsViewModelFactory(
-            DetailsRepositoryImpl(RemoteDataSource()),
+            DetailsRepositoryImpl(remoteDataSource),
             WeatherLocalRepositoryImpl(weather_dao)
         )
     }

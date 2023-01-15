@@ -6,11 +6,15 @@ import com.example.java.android1.weather.room.WeatherDao
 import com.example.java.android1.weather.room.convertWeatherDtoToWeatherEntity
 import com.example.java.android1.weather.room.convertWeatherEntityToWeatherDto
 
+/**
+ * The implementation WeatherLocalRepository for interacting with local database
+ */
+
 class WeatherLocalRepositoryImpl(
     private val localWeatherDao: WeatherDao
 ) : WeatherLocalRepository {
 
-    override fun getAllWeather(): List<WeatherDTO> =
+    override fun getAllWeatherList(): List<WeatherDTO> =
         convertWeatherEntityToWeatherDto(localWeatherDao.all())
 
     @WorkerThread
@@ -19,7 +23,7 @@ class WeatherLocalRepositoryImpl(
 
 
     @WorkerThread
-    override suspend fun update(weatherDTO: WeatherDTO) =
+    override suspend fun updateWeather(weatherDTO: WeatherDTO) =
         localWeatherDao.update(convertWeatherDtoToWeatherEntity(weatherDTO))
 
 }

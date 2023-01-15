@@ -1,7 +1,5 @@
 package com.example.java.android1.weather.app
 
-import com.example.java.android1.weather.app.AppState.*
-
 /**
  * The class for determining the response status from the user
  * The class contains 2 states.

@@ -2,6 +2,10 @@ package com.example.java.android1.weather.room
 
 import com.example.java.android1.weather.model.*
 
+/**
+ * Auxiliary methods for convenient conversion of one data type to another
+ */
+
 fun convertWeatherEntityToWeatherDto(weatherEntity: List<WeatherEntity>): List<WeatherDTO> {
     return weatherEntity.map {
         WeatherDTO(

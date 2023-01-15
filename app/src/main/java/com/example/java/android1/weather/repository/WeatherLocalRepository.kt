@@ -2,11 +2,14 @@ package com.example.java.android1.weather.repository
 
 import com.example.java.android1.weather.model.WeatherDTO
 
-interface WeatherLocalRepository {
+/**
+ * The local repository for interacting with weather local database
+ */
 
-    fun getAllWeather(): List<WeatherDTO>
+interface WeatherLocalRepository {
+    fun getAllWeatherList(): List<WeatherDTO>
 
     suspend fun insertWeather(weatherDTO: WeatherDTO)
 
-    suspend fun update(weatherDTO: WeatherDTO)
+    suspend fun updateWeather(weatherDTO: WeatherDTO)
 }
