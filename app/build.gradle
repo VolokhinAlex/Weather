@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-parcelize'
+    id 'kotlin-kapt'
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -21,16 +23,25 @@ android {
     buildFeatures {
         viewBinding true
     }
-
     buildTypes.each {
         Properties properties = new Properties()
         properties.load(project.rootProject.file("apikey.properties").newDataInputStream())
         def apiKey = properties.getProperty("yandex_weather_api_key", "")
         it.buildConfigField "String", "WEATHER_API_KEY", apiKey
     }
-
+    signingConfigs {
+        release {
+            Properties keystoreProperties = new Properties()
+            keystoreProperties.load(project.rootProject.file("keystore.properties").newDataInputStream())
+            storeFile file("keystore.jks")
+            storePassword keystoreProperties['store_password']
+            keyAlias keystoreProperties['key_alias']
+            keyPassword keystoreProperties['key_password']
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -41,12 +52,15 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+        freeCompilerArgs += [
+                '-Xjvm-default=enable'
+        ]
     }
     buildFeatures {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.1.1'
+        kotlinCompilerExtensionVersion '1.3.2'
     }
     packagingOptions {
         resources {
@@ -56,29 +70,50 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.navigation:navigation-compose:2.5.3'
+
+    // Firebase Messaging
+    implementation 'com.google.firebase:firebase-messaging-ktx:23.1.1'
+
+    // Room
+    kapt 'androidx.room:room-compiler:2.5.0'
+    implementation 'androidx.room:room-runtime:2.5.0'
+    implementation 'androidx.room:room-ktx:2.5.0'
+
+    // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+
+    // Compose
+    implementation 'androidx.navigation:navigation-compose:2.5.3'
     implementation 'androidx.activity:activity-compose:1.6.1'
     implementation 'androidx.compose.material3:material3:1.0.1'
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation "androidx.compose.runtime:runtime-livedata:1.3.2"
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha03'
+
+    // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.3'
+
+    // Coil
     implementation 'io.coil-kt:coil-compose:2.2.2'
     implementation 'io.coil-kt:coil-svg:2.2.2'
-    implementation 'com.google.code.gson:gson:2.9.0'
+
     implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.5.1'
+
+    // Design
+    implementation 'androidx.appcompat:appcompat:1.6.0'
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
     implementation 'androidx.navigation:navigation-fragment:2.5.3'
+
+    // Tests
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"

@@ -7,55 +7,69 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.example.java.android1.weather.view.theme.DarkTextColor
 import com.example.java.android1.weather.view.theme.DarkTextColor50
+import com.example.java.android1.weather.view.theme.FORECASTS_CARD_PRIMARY_PADDING
+import com.example.java.android1.weather.view.theme.FORECASTS_CARD_TEXT_SIZE
 
 @Composable
 fun ForecastWeatherCard(icon: String, day: String, dayTempAvg: String, nightTempAvg: String) {
-    Card(shape = RoundedCornerShape(5.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+    Card(
+        shape = RoundedCornerShape(5.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = FORECASTS_CARD_PRIMARY_PADDING)
+    ) {
         Row(
             modifier = Modifier
-                .padding(start = 10.dp, end = 10.dp)
+                .padding(
+                    start = FORECASTS_CARD_PRIMARY_PADDING,
+                    end = FORECASTS_CARD_PRIMARY_PADDING
+                )
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = day,
-                fontSize = 18.sp,
+                fontSize = FORECASTS_CARD_TEXT_SIZE,
                 color = DarkTextColor,
-                modifier = Modifier.padding(end = 25.dp)
+                modifier = Modifier.size(width = 100.dp, height = 25.dp)
             )
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data("https://yastatic.net/weather/i/icons/funky/dark/${icon}.svg")
                     .decoderFactory(SvgDecoder.Factory())
                     .build(),
-                contentDescription = "",
-                modifier = Modifier.size(50.dp)
+                contentDescription = "weather icon",
+                modifier = Modifier.size(50.dp),
+                contentScale = ContentScale.Crop
             )
-            Row(modifier = Modifier.padding(start = 25.dp)) {
+            Row(
+                modifier = Modifier
+                    .size(width = 100.dp, height = 25.dp)
+                    .padding(start = 25.dp)
+            ) {
                 Text(
                     text = "${dayTempAvg}°",
-                    fontSize = 18.sp,
+                    fontSize = FORECASTS_CARD_TEXT_SIZE,
                     color = DarkTextColor,
-                    modifier = Modifier.padding(end = 5.dp)
+                    modifier = Modifier.padding(end = 5.dp),
+                    textAlign = TextAlign.End
                 )
-                Text(text = "${nightTempAvg}°", fontSize = 18.sp, color = DarkTextColor50)
+                Text(
+                    text = "${nightTempAvg}°",
+                    fontSize = FORECASTS_CARD_TEXT_SIZE,
+                    color = DarkTextColor50
+                )
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewScreen() {
-    ForecastWeatherCard("ovc", "Monday", "15", "17")
 }

@@ -3,27 +3,21 @@ package com.example.java.android1.weather.view
 import android.os.Bundle
 import androidx.core.net.toUri
 import androidx.navigation.*
-import com.example.java.android1.weather.model.WeatherDTO
-import com.google.gson.Gson
+
+/**
+ * The class needed to navigate between screens
+ * The following sealed class the screens on which you can navigate
+ */
 
 sealed class Screen(val route: String) {
-    object HomeScreen: Screen(route = "home_screen")
-    object DetailWeatherScreen: Screen(route = "detail_weather_screen")
+    object HomeScreen : Screen(route = "home_screen")
+    object DetailWeatherScreen : Screen(route = "detail_weather_screen")
 }
 
-//class AssetParamType : NavType<WeatherDTO>(isNullableAllowed = false) {
-//    override fun get(bundle: Bundle, key: String): WeatherDTO? {
-//        return bundle.getParcelable(key)
-//    }
-//
-//    override fun parseValue(value: String): WeatherDTO {
-//        return Gson().fromJson(value, WeatherDTO::class.java)
-//    }
-//
-//    override fun put(bundle: Bundle, key: String, value: WeatherDTO) {
-//        bundle.putParcelable(key, value)
-//    }
-//}
+/**
+ * Extensions for the NavController class, for convenient data transfer between screens using bundle
+ * Thanks to this, any parcelable objects can be transferred between screens
+ */
 
 fun NavController.navigate(
     route: String,

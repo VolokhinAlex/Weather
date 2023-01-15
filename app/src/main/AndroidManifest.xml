@@ -2,9 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".app.App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -14,6 +17,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Weather"
         tools:targetApi="31">
+        <service
+            android:name=".services.MessagingNotificationService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".view.MainActivity"
             android:exported="true">
@@ -27,8 +39,6 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-
-        <service android:name=".view.details.WeatherLoaderBroadcastReceiver"/>
     </application>
 
 </manifest>
