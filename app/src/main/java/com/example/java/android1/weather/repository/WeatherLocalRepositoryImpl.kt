@@ -13,12 +13,6 @@ class WeatherLocalRepositoryImpl(
     override fun getAllWeather(): List<WeatherDTO> =
         convertWeatherEntityToWeatherDto(localWeatherDao.all())
 
-    override fun getWeatherFromLocalStorageRus(): List<WeatherDTO> =
-        convertWeatherEntityToWeatherDto(localWeatherDao.getCityRusWeather())
-
-    override fun getWeatherFromLocalStorageWorld(): List<WeatherDTO> =
-        convertWeatherEntityToWeatherDto(localWeatherDao.getCityWorldWeather())
-
     @WorkerThread
     override suspend fun insertWeather(weatherDTO: WeatherDTO) =
         localWeatherDao.insert(convertWeatherDtoToWeatherEntity(weatherDTO))
