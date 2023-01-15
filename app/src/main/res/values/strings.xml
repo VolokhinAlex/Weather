@@ -12,5 +12,5 @@
     <string name="label_pressure">Pressure</string>
     <string name="label_sunrise">Sunrise</string>
     <string name="label_sunset">Sunset</string>
-    <string name="contacts">Contacts</string>
+    <string name="today">Today</string>
 </resources>

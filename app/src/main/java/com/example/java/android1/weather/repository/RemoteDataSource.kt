@@ -13,7 +13,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class RemoteDataSource {
 
-    val weatherApi: WeatherApi = Retrofit.Builder()
+    private val weatherApi: WeatherApi = Retrofit.Builder()
         .baseUrl("https://api.weather.yandex.ru/")
         .addConverterFactory(
             GsonConverterFactory.create(
@@ -24,8 +24,8 @@ class RemoteDataSource {
         .build().create(WeatherApi::class.java)
 
 
-    fun getWeatherDetail(lat: Double, lon: Double, lang: String, callback: Callback<WeatherDTO>) {
-        val request = weatherApi.getWeatherDetail(
+    fun getDetailsWeather(lat: Double, lon: Double, lang: String, callback: Callback<WeatherDTO>) {
+        val request = weatherApi.getDetailsWeather(
             token = BuildConfig.WEATHER_API_KEY,
             lat = lat,
             lon = lon,

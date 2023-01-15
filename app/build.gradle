@@ -23,16 +23,25 @@ android {
     buildFeatures {
         viewBinding true
     }
-
     buildTypes.each {
         Properties properties = new Properties()
         properties.load(project.rootProject.file("apikey.properties").newDataInputStream())
         def apiKey = properties.getProperty("yandex_weather_api_key", "")
         it.buildConfigField "String", "WEATHER_API_KEY", apiKey
     }
-
+    signingConfigs {
+        release {
+            Properties keystoreProperties = new Properties()
+            keystoreProperties.load(project.rootProject.file("keystore.properties").newDataInputStream())
+            storeFile file("keystore.jks")
+            storePassword keystoreProperties['store_password']
+            keyAlias keystoreProperties['key_alias']
+            keyPassword keystoreProperties['key_password']
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -43,12 +52,15 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+        freeCompilerArgs += [
+                '-Xjvm-default=enable'
+        ]
     }
     buildFeatures {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.1.1'
+        kotlinCompilerExtensionVersion '1.3.2'
     }
     packagingOptions {
         resources {
@@ -64,6 +76,7 @@ dependencies {
     implementation 'androidx.room:room-ktx:2.4.3'
     implementation 'androidx.navigation:navigation-compose:2.5.3'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha03'
     implementation 'androidx.activity:activity-compose:1.6.1'
     implementation 'androidx.compose.material3:material3:1.0.1'
     implementation "androidx.compose.ui:ui:$compose_version"
@@ -83,8 +96,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
     implementation 'androidx.navigation:navigation-fragment:2.5.3'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"

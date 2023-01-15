@@ -25,6 +25,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+/**
+ * The method for remembering all search states
+ */
+
 @Composable
 fun rememberSearchState(
     query: TextFieldValue = TextFieldValue(""),
@@ -40,8 +44,13 @@ fun rememberSearchState(
     }
 }
 
+/**
+ * The method for showing hint in the search text field
+ */
+
+
 @Composable
-private fun SearchHint(modifier: Modifier = Modifier, searchHint: String) {
+private fun SearchTextFieldHint(modifier: Modifier = Modifier, searchHint: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -57,6 +66,18 @@ private fun SearchHint(modifier: Modifier = Modifier, searchHint: String) {
     }
 }
 
+/**
+ * The method for creating a search text field with states
+ * @param query - The value written in the text field
+ * @param onQueryChange - Occurs every time the value in the text field changes
+ * @param onSearchFocusChange - Occurs when the text field is clicked and when the back button is clicked
+ * @param onClearQuery - Occurs to clear a value in a text field
+ * @param location - Called when requesting weather by location
+ * @param searching - Search states. Occurs when the user types some text
+ * @param focused - Occurs if there is a focus on the text field
+ * @param searchHint - Hint for a text field
+ */
+
 @Composable
 fun SearchTextField(
     query: TextFieldValue,
@@ -69,9 +90,7 @@ fun SearchTextField(
     modifier: Modifier = Modifier,
     searchHint: String
 ) {
-
     val focusRequester = remember { FocusRequester() }
-
     Surface(
         modifier = modifier
             .then(
@@ -87,19 +106,16 @@ fun SearchTextField(
         color = Color(0xffF5F5F5),
         shape = RoundedCornerShape(percent = 50),
     ) {
-
         Box(
             contentAlignment = Alignment.CenterStart,
             modifier = modifier
         ) {
-
             if (query.text.isEmpty()) {
-                SearchHint(
+                SearchTextFieldHint(
                     modifier
                         .padding(start = 24.dp, end = 8.dp)
                         .align(Alignment.Center), searchHint)
             }
-
             Row(verticalAlignment = Alignment.CenterVertically) {
                 BasicTextField(
                     value = query,
@@ -135,9 +151,21 @@ fun SearchTextField(
                 }
             }
         }
-
     }
 }
+
+/**
+ * The method for displaying the search text field
+ * @param query - The value written in the text field
+ * @param onQueryChange - Occurs every time the value in the text field changes
+ * @param onSearchFocusChange - Occurs when the text field is clicked and when the back button is clicked
+ * @param onClearQuery - Occurs to clear a value in a text field
+ * @param onBack - Occurs when you click on the back arrow
+ * @param searching - Search states. Occurs when the user types some text
+ * @param focused - Occurs if there is a focus on the text field
+ * @param searchHint - Hint for a text field
+ * @param location - Called when requesting weather by location
+ */
 
 @ExperimentalAnimationApi
 @OptIn(ExperimentalComposeUiApi::class)

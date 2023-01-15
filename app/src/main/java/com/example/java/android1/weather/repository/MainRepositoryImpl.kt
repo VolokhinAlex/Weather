@@ -13,7 +13,7 @@ class MainRepositoryImpl(
         lang: String,
         callback: Callback<WeatherDTO>
     ) {
-        remoteDataSource.getWeatherDetail(lat, lon, lang, callback)
+        remoteDataSource.getDetailsWeather(lat, lon, lang, callback)
     }
 
 }

@@ -6,6 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 
+/**
+ * The class needed to remember search states
+ */
+
 @Stable
 class SearchState(
     query: TextFieldValue,
