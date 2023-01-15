@@ -1,6 +1,7 @@
 package com.example.java.android1.weather.view.main
 
 import android.os.Bundle
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +15,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.java.android1.weather.R
 import com.example.java.android1.weather.model.WeatherDTO
 import com.example.java.android1.weather.view.Screen
 import com.example.java.android1.weather.view.WEATHER_DATA_KEY
@@ -36,7 +39,11 @@ fun HomeScreen(viewModel: MainViewModel, navController: NavController) {
 }
 
 @Composable
-fun RenderDataComposable(appState: AppState, navController: NavController, viewModel: MainViewModel, cityState: MutableState<String>
+fun RenderDataComposable(
+    appState: AppState,
+    navController: NavController,
+    viewModel: MainViewModel,
+    cityState: MutableState<String>
 ) {
     when (appState) {
         is AppState.Error -> NotFoundData()
@@ -86,6 +93,15 @@ private fun CitiesListView(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
+            item {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_baseline_contacts_24),
+                    contentDescription = "",
+                    modifier = Modifier.clickable {
+                        navController.navigate(Screen.ContactsScreen.route)
+                    }
+                )
+            }
             itemsIndexed(weather) { _, item ->
                 Surface(modifier = Modifier.clickable {
                     val bundle = Bundle()

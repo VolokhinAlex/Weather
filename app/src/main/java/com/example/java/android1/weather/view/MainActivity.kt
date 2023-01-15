@@ -1,14 +1,20 @@
 package com.example.java.android1.weather.view
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.findNavController
+import com.example.java.android1.weather.R
 import com.example.java.android1.weather.model.WeatherDTO
+import com.example.java.android1.weather.view.contacts.ContactsScreen
 import com.example.java.android1.weather.view.details.DetailsScreen
 import com.example.java.android1.weather.view.main.HomeScreen
 import com.example.java.android1.weather.viewmodel.MainViewModel
@@ -16,6 +22,7 @@ import com.example.java.android1.weather.viewmodel.MainViewModel
 const val WEATHER_DATA_KEY = "Weather.Data.Key"
 
 class MainActivity : ComponentActivity() {
+
     private val homeViewModel: MainViewModel by lazy {
         ViewModelProvider(this)[MainViewModel::class.java]
     }
@@ -40,6 +47,11 @@ fun Navigation(homeViewModel: MainViewModel) {
         ) {
             val weather = it.arguments?.getParcelable<WeatherDTO>(WEATHER_DATA_KEY)
             weather?.let { it1 -> DetailsScreen(weather) }
+        }
+        composable(
+            route = Screen.ContactsScreen.route
+        ) {
+            ContactsScreen()
         }
     }
 }
